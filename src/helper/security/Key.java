@@ -25,6 +25,7 @@ public class Key {
         return iv;
     }
 
+    //TODO: check if this is correct
     public static byte[] generateHMAC_SHA256(byte[] data, SecretKey secretKey) throws NoSuchAlgorithmException, InvalidKeyException {
         SecretKeySpec secretKeySpec = new SecretKeySpec(secretKey.getEncoded(), "HmacSHA256");
         Mac mac = Mac.getInstance("HmacSHA256");
