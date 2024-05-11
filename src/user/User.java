@@ -6,7 +6,7 @@ import java.security.KeyPair;
 
 public class User {
     private String username;
-    private KeyPair keyPair;
+    private KeyPair keyPair; // let's encapsulate the key pair in the user class
 
     public User(String username) {
         this.username = username;
@@ -25,10 +25,5 @@ public class User {
     public void setUsername(String username) {
         this.username = username;
     }
-    public KeyPair getKeyPair() {
-        return keyPair;
-    }
-    public void setKeyPair(KeyPair keyPair) {
-        this.keyPair = keyPair;
-    }
+
 }

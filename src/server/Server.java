@@ -1,15 +1,12 @@
 package server;
 
 import java.security.KeyPair;
+import java.security.PublicKey;
 
 public class Server {
     private KeyPair keyPair;
 
-    // Getters and setters
-    public KeyPair getKeyPair() {
-        return keyPair;
-    }
-    public void setKeyPair(KeyPair keyPair) {
-        this.keyPair = keyPair;
+    public PublicKey getPublicKey() {
+        return keyPair.getPublic();
     }
 }

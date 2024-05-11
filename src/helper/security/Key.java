@@ -33,6 +33,11 @@ public class Key {
         return mac.doFinal(data);
     }
 
+    public static byte[] generateMessageDigest(byte[] data) throws NoSuchAlgorithmException {
+        MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
+        return messageDigest.digest(data);
+    }
+
     public static byte[] encryptWithAES(byte[] data, SecretKey secretKey, byte[] iv) throws NoSuchAlgorithmException, InvalidKeyException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException, NoSuchPaddingException {
         Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
         cipher.init(Cipher.ENCRYPT_MODE, secretKey, new IvParameterSpec(iv));
