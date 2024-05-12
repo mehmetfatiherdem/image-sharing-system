@@ -6,17 +6,17 @@ import java.security.*;
 
 
 public class Auth {
-    public static byte[] sign(UserCertificateCredentials userCertificateCredentials, PrivateKey privateKey) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+    public static byte[] sign(byte[] data, PrivateKey privateKey) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
         Signature signature = Signature.getInstance("SHA256withRSA");
         signature.initSign(privateKey);
-        signature.update(userCertificateCredentials.getCredentialBytes());
+        signature.update(data);
         return signature.sign();
     }
 
-    public static boolean verify(Certificate certificate, PublicKey publicKey) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+    public static boolean verify(byte[] data, byte[] signature, PublicKey publicKey) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
         Signature sign = Signature.getInstance("SHA256withRSA");
         sign.initVerify(publicKey);
-        sign.update(certificate.getCertificateCredentials().getCredentialBytes());
-        return sign.verify(certificate.getSignature());
+        sign.update(data);
+        return sign.verify(signature);
     }
 }

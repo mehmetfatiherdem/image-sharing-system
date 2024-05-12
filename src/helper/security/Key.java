@@ -18,8 +18,8 @@ public class Key {
         return keyGenerator.generateKey();
     }
 
-    public static byte[] generateIV(int ivSize) {
-        byte[] iv = new byte[ivSize];
+    public static byte[] generateIV(int ivSizeByte) {
+        byte[] iv = new byte[ivSizeByte];
         SecureRandom secureRandom = new SecureRandom();
         secureRandom.nextBytes(iv);
         return iv;
@@ -48,6 +48,19 @@ public class Key {
         Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
         cipher.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(iv));
         return cipher.doFinal(data);
+    }
+
+    public static byte[] encryptWithSymmetricKey(byte[] data, PublicKey key) throws Exception {
+        Cipher cipher = Cipher.getInstance("RSA");
+        cipher.init(Cipher.ENCRYPT_MODE, key);
+        return cipher.doFinal(data);
+    }
+
+    public static byte[] decryptWithSymmetricKey(byte[] encryptedData, PrivateKey key) throws Exception {
+        Cipher cipher = Cipher.getInstance("RSA");
+        cipher.init(Cipher.DECRYPT_MODE, key);
+        var e = new SecretKeySpec(cipher.doFinal(encryptedData), "AES");
+        return e.getEncoded();
     }
 
 }
