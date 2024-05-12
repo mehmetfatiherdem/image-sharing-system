@@ -1,4 +1,4 @@
-package server;
+package model;
 
 import java.security.KeyPair;
 import java.security.PublicKey;

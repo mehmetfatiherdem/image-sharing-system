@@ -17,6 +17,6 @@ public class ApplicationManager {
     }
 
     public void run() {
-
+        System.out.println("Application is running");
     }
 }
