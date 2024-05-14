@@ -1,4 +1,5 @@
 package service;
+import helper.image.ImageDownloadData;
 import helper.image.ImageFileIO;
 import helper.image.ImagePostData;
 import helper.security.Auth;
@@ -61,5 +62,10 @@ public class UserServiceImpl implements UserService {
     @Override
     public void downloadImage(String imageName) {
         // TODO: implement this method
+    }
+
+    @Override
+    public void retrieveImage(ImageDownloadData imageDownloadData) {
+
     }
 }
