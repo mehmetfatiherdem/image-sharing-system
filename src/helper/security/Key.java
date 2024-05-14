@@ -51,7 +51,7 @@ public class Key {
     }
 
     public static String appendMACToMessage(byte[] message, byte[] mac) throws Exception {
-        return message + ":" + Base64.getEncoder().encodeToString(mac);
+        return message + " " + Base64.getEncoder().encodeToString(mac);
     }
 
     public static byte[] generateMessageDigest(byte[] data) throws NoSuchAlgorithmException {

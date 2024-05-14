@@ -10,7 +10,6 @@ public class User {
 
     public User(String username) {
         this.username = username;
-
         try {
             this.keyPair = Key.generateKeyPairs(2048);
         } catch (Exception e) {

@@ -1,6 +1,5 @@
 package controller;
 
-import helper.image.ImagePostData;
 import model.Certificate;
 import service.UserService;
 

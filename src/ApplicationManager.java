@@ -1,5 +1,7 @@
 import dto.UserDTO;
-import helper.security.Key;
+import helper.Constants;
+import model.Server;
+import socket.TCPServer;
 
 import java.util.ArrayList;
 
@@ -18,7 +20,16 @@ public class ApplicationManager {
     }
 
     public void run() {
-        System.out.println("Application is running");
-        
+        Server server;
+
+        try {
+            server = Server.getInstance();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return;
+        }
+
+        server.run();
+
     }
 }
