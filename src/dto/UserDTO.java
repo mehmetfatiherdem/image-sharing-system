@@ -1,8 +1,11 @@
 package dto;
 
+import model.Certificate;
+
 public class UserDTO {
     private String username;
     private boolean isOnline;
+    private Certificate certificate;
 
     public UserDTO(String username) {
         this.username = username;
@@ -25,5 +28,8 @@ public class UserDTO {
     }
     public void setOnline(boolean isOnline) {
         this.isOnline = isOnline;
+    }
+    public Certificate getCertificate() {
+        return certificate;
     }
 }

@@ -5,17 +5,24 @@ import helper.image.ImagePostData;
 import helper.security.Auth;
 import helper.security.Key;
 import model.Certificate;
+import model.Server;
 import repository.UserRepository;
 
 import javax.crypto.SecretKey;
+import java.io.DataOutputStream;
+import java.net.Socket;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
+    private final Server server;
+    private final Socket socket;
 
-    public UserServiceImpl(UserRepository userRepository) {
+    public UserServiceImpl(UserRepository userRepository, Server server, Socket socket) {
         this.userRepository = userRepository;
+        this.server = server;
+        this.socket = socket;
     }
 
     @Override
@@ -50,9 +57,20 @@ public class UserServiceImpl implements UserService {
 
             ImagePostData imagePostData = new ImagePostData(imageName, encryptedImageBytes, digitalSignature, encryptedAESKey, iv);
 
-            //FIXME: not sure how to handle post image since it will be done through sockets
-            // maybe we can create a task to sen the byte via socket and pass the imagePostData as a parameter
-            // call that task here in a thread
+
+            try{
+
+                DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+
+                var macKey = Key.generateMACKey();
+                var mac = Key.generateMAC(imagePostData.getMessageString().getBytes(), macKey);
+                var message = Key.appendMACToMessage(imagePostData.getMessageString().getBytes(), mac);
+
+                out.writeUTF(message);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -61,7 +79,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void downloadImage(String imageName) {
-        // TODO: implement this method
+
+        try {
+            DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+            out.writeUTF("DOWNLOAD" + " " + imageName);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

@@ -6,14 +6,18 @@ import helper.security.Auth;
 import helper.security.UserCertificateCredentials;
 import repository.ServerRepository;
 
+import java.io.DataOutputStream;
+import java.net.Socket;
 import java.security.PrivateKey;
 import java.util.ArrayList;
 
 public class ServerServiceImpl implements ServerService {
     private final ServerRepository serverRepository;
+    private final Socket socket;
 
-    public ServerServiceImpl(ServerRepository serverRepository) {
+    public ServerServiceImpl(ServerRepository serverRepository, Socket socket) {
         this.serverRepository = serverRepository;
+        this.socket = socket;
     }
     @Override
     public void createCertificate(UserCertificateCredentials userCertificateCredentials, PrivateKey privateKey) {
@@ -32,6 +36,12 @@ public class ServerServiceImpl implements ServerService {
 
     @Override
     public void sendImage(ImageDownloadData imageDownloadData) {
-        // TODO: implement this method
+
+        try {
+            DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+            out.writeUTF(imageDownloadData.getMessageString());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

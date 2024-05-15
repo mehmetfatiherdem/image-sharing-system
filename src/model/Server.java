@@ -1,44 +1,82 @@
 package model;
 
-import helper.Constants;
-import socket.TCPServer;
-
 import helper.security.Key;
+
+import java.io.BufferedInputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.net.BindException;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 
-public class Server {
+public class Server implements Runnable{
+
     private static Server instance;
     private KeyPair keyPair;
-    private TCPServer tcpServer;
+    private final int port;
+    private ServerSocket serverSocket;
+    private Socket socket;
 
-    private Server() throws NoSuchAlgorithmException {
+    private Server(int port) throws NoSuchAlgorithmException {
+        this.port = port;
         keyPair = Key.generateKeyPairs(2048);
-        tcpServer = new TCPServer(Constants.SERVER_PORT);
     }
 
-    public static Server getInstance() throws NoSuchAlgorithmException {
+    public static Server getInstance(int port) throws NoSuchAlgorithmException, BindException {
         if (instance == null) {
-            instance = new Server();
+            instance = new Server(port);
         }
         return instance;
     }
 
+    @Override
     public void run() {
-        Thread serverThread = new Thread(tcpServer);
-        serverThread.start();
+        try {
+            serverSocket = new ServerSocket(port);
 
-        if (tcpServer != null) {
-            System.out.println("Server is running on port " + tcpServer.getPort());
+            socket = serverSocket.accept();
+
+
+           DataInputStream in = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
+           DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+
+
+            while (true) {
+                String message = in.readUTF();
+                if (message.equals("ping")) {
+                    out.writeUTF("pong");
+                } else {
+                    out.writeUTF("error");
+                }
+            }
+
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
+    public void fireUp() {
+        Thread serverThread = new Thread(this);
+        serverThread.start();
+    }
+
+    // Getters
+    public int getPort() {
+        return port;
+    }
+    public ServerSocket getServerSocket() {
+        return serverSocket;
+    }
+    public Socket getSocket() {
+        return socket;
+    }
     public PublicKey getPublicKey() {
         return keyPair.getPublic();
     }
 
-    public TCPServer getTcpServer() {
-        return tcpServer;
-    }
 }

@@ -8,9 +8,9 @@ import service.ServerService;
 import java.security.PrivateKey;
 import java.util.ArrayList;
 
-public class ServiceController {
+public class ServerController {
     private final ServerService serverService;
-    public ServiceController(ServerService serverService) {
+    public ServerController(ServerService serverService) {
         this.serverService = serverService;
     }
 
@@ -25,4 +25,5 @@ public class ServiceController {
     public void sendImage(ImageDownloadData imageDownloadData) {
         serverService.sendImage(imageDownloadData);
     }
+
 }

@@ -1,5 +1,7 @@
 package helper.image;
 
+import java.util.Arrays;
+
 public class ImageDownloadData {
     private final byte[] encryptedImage;
     private final byte[] digitalSignature;
@@ -11,6 +13,11 @@ public class ImageDownloadData {
         this.digitalSignature = digitalSignature;
         this.encryptedAESKey = encryptedAESKey;
         this.certificatePublicKey = certificatePublicKey;
+    }
+
+    public String getMessageString(){
+        return "IMAGE_DATA" + " " + Arrays.toString(encryptedImage) + " " + Arrays.toString(digitalSignature) + " "
+                + Arrays.toString(encryptedAESKey) + " " + Arrays.toString(certificatePublicKey);
     }
 
     // Getters
