@@ -2,7 +2,7 @@ package service;
 
 import dto.UserDTO;
 import helper.image.ImageDownloadData;
-import helper.security.Auth;
+import helper.security.Authentication;
 import helper.security.UserCertificateCredentials;
 import repository.ServerRepository;
 
@@ -22,7 +22,7 @@ public class ServerServiceImpl implements ServerService {
     @Override
     public void createCertificate(UserCertificateCredentials userCertificateCredentials, PrivateKey privateKey) {
         try{
-            byte[] certificate = Auth.sign(userCertificateCredentials.getCredentialBytes(), privateKey);
+            byte[] certificate = Authentication.sign(userCertificateCredentials.getCredentialBytes(), privateKey);
             serverRepository.addCertificate(certificate);
         } catch (Exception e) {
             e.printStackTrace();

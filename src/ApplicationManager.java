@@ -1,4 +1,4 @@
-import dto.UserDTO;
+import db.MyDB;
 import helper.Constants;
 import model.Server;
 import socket.TCPClient;
@@ -8,12 +8,9 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
 
 public class ApplicationManager {
     private static ApplicationManager instance;
-    private final ArrayList<UserDTO> users = new ArrayList<>();
 
     private ApplicationManager() {
     }
@@ -26,6 +23,10 @@ public class ApplicationManager {
     }
 
     public void run() {
+
+        MyDB myDB = MyDB.getInstance();
+        myDB.connect();
+
         Server server;
 
         try {
@@ -57,6 +58,8 @@ public class ApplicationManager {
             Thread clientThread = new Thread(client);
             clientThread.start();
 
+            System.out.println("ping");
+
             Thread.sleep(1000);
 
             DataOutputStream out = new DataOutputStream(client.getSocket().getOutputStream());
@@ -71,25 +74,12 @@ public class ApplicationManager {
             }
 
             out.writeUTF("panic");
+            System.out.println("panic");
 
             if (in.readUTF().equals("pong")) {
                 System.out.println("pong");
             } else {
                 System.out.println("error");
-            }
-
-            Thread.sleep(1000);
-
-            out.writeUTF("ping");
-
-            while (true) {
-                String message = in.readUTF();
-                if (message.equals("pong")) {
-                    System.out.println("pong");
-                    out.writeUTF("ping");
-                } else {
-                    out.writeUTF("error");
-                }
             }
 
         } catch (InterruptedException | IOException e) {

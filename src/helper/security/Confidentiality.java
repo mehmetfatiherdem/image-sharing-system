@@ -4,10 +4,8 @@ import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.*;
-import java.util.Arrays;
-import java.util.Base64;
 
-public class Key {
+public class Confidentiality {
     public static KeyPair generateKeyPairs(int keySize) throws NoSuchAlgorithmException {
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
         keyPairGenerator.initialize(keySize);
@@ -25,33 +23,6 @@ public class Key {
         SecureRandom secureRandom = new SecureRandom();
         secureRandom.nextBytes(iv);
         return iv;
-    }
-
-    public static byte[] generateMACKey() throws Exception {
-        SecureRandom random = SecureRandom.getInstanceStrong();
-        byte[] keyBytes = new byte[16];
-        random.nextBytes(keyBytes);
-        return keyBytes;
-    }
-
-    public static byte[] generateMAC(byte[] message, byte[] key) throws Exception {
-        Mac mac = Mac.getInstance("HmacSHA256");
-        mac.init(new SecretKeySpec(key, "HmacSHA256"));
-        mac.update(message);
-        return mac.doFinal();
-    }
-
-    public static boolean verifyMAC(String message, byte[] receivedMac, byte[] key) throws Exception {
-        Mac mac = Mac.getInstance("HmacSHA256");
-        SecretKeySpec secretKeySpec = new SecretKeySpec(key, "HmacSHA256");
-        mac.init(secretKeySpec);
-        mac.update(message.getBytes());
-        byte[] calculatedMac = mac.doFinal();
-        return Arrays.equals(calculatedMac, receivedMac);
-    }
-
-    public static String appendMACToMessage(byte[] message, byte[] mac) throws Exception {
-        return message + " " + Base64.getEncoder().encodeToString(mac);
     }
 
     public static byte[] generateMessageDigest(byte[] data) throws NoSuchAlgorithmException {

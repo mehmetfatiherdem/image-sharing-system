@@ -2,8 +2,8 @@ package service;
 import helper.image.ImageDownloadData;
 import helper.image.ImageFileIO;
 import helper.image.ImagePostData;
-import helper.security.Auth;
-import helper.security.Key;
+import helper.security.Authentication;
+import helper.security.Confidentiality;
 import model.Certificate;
 import model.Server;
 import repository.UserRepository;
@@ -30,7 +30,7 @@ public class UserServiceImpl implements UserService {
         boolean isVerified = false;
 
         try {
-            isVerified = Auth.verify(certificate.getCertificateCredentials().getCredentialBytes(), certificate.getSignature(), publicKey);
+            isVerified = Authentication.verify(certificate.getCertificateCredentials().getCredentialBytes(), certificate.getSignature(), publicKey);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -43,17 +43,17 @@ public class UserServiceImpl implements UserService {
         try {
             ImageFileIO imageFileIO = new ImageFileIO(imagePath);
             byte[] imageBytes = imageFileIO.getImageBytes();
-            SecretKey aesKey = Key.generateAESKey(256);
+            SecretKey aesKey = Confidentiality.generateAESKey(256);
 
-            byte[] iv = Key.generateIV(16);
-            byte[] encryptedImageBytes = Key.encryptWithAES(imageBytes, aesKey, iv);
+            byte[] iv = Confidentiality.generateIV(16);
+            byte[] encryptedImageBytes = Confidentiality.encryptWithAES(imageBytes, aesKey, iv);
 
             // hash and sign the image
-            byte[] imageHash = Key.generateMessageDigest(encryptedImageBytes);
-            byte[] digitalSignature = Auth.sign(imageHash, userPrivateKey);
+            byte[] imageHash = Confidentiality.generateMessageDigest(encryptedImageBytes);
+            byte[] digitalSignature = Authentication.sign(imageHash, userPrivateKey);
 
             // encrypt the AES key with the server's public key
-            byte[] encryptedAESKey = Key.encryptWithSymmetricKey(aesKey.getEncoded(), serverPublicKey);
+            byte[] encryptedAESKey = Confidentiality.encryptWithSymmetricKey(aesKey.getEncoded(), serverPublicKey);
 
             ImagePostData imagePostData = new ImagePostData(imageName, encryptedImageBytes, digitalSignature, encryptedAESKey, iv);
 
@@ -62,9 +62,9 @@ public class UserServiceImpl implements UserService {
 
                 DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
-                var macKey = Key.generateMACKey();
-                var mac = Key.generateMAC(imagePostData.getMessageString().getBytes(), macKey);
-                var message = Key.appendMACToMessage(imagePostData.getMessageString().getBytes(), mac);
+                var macKey = Authentication.generateMACKey();
+                var mac = Authentication.generateMAC(imagePostData.getMessageString().getBytes(), macKey);
+                var message = Authentication.appendMACToMessage(imagePostData.getMessageString().getBytes(), mac);
 
                 out.writeUTF(message);
 
@@ -92,4 +92,5 @@ public class UserServiceImpl implements UserService {
     public void retrieveImage(ImageDownloadData imageDownloadData) {
 
     }
+
 }

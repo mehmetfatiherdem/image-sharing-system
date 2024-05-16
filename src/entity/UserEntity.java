@@ -1,25 +1,21 @@
-package model;
+package entity;
 
 import helper.security.Authentication;
 import helper.security.Confidentiality;
 
 import java.security.KeyPair;
 
-public class User {
+public class UserEntity {
     private String username;
-    private String password;
+    private byte[] password;
     private byte[] passwordSalt;
     private KeyPair keyPair;
 
-    public User(String username, String password) {
+    public UserEntity(String username, String password, byte[] passwordSalt, KeyPair keyPair) throws Exception {
         this.username = username;
-        this.password = password;
-        try {
-            this.passwordSalt = Authentication.generateSalt();
-            this.keyPair = Confidentiality.generateKeyPairs(2048);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        this.password = Authentication.hashPassword(password, passwordSalt);
+        this.passwordSalt = passwordSalt;
+        this.keyPair = keyPair;
     }
 
     // Getters and setters
@@ -38,8 +34,4 @@ public class User {
     public KeyPair getKeyPair() {
         return keyPair;
     }
-    public String getPassword() {
-        return password;
-    }
-
 }

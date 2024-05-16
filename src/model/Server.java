@@ -1,6 +1,6 @@
 package model;
 
-import helper.security.Key;
+import helper.security.Confidentiality;
 
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
@@ -22,7 +22,7 @@ public class Server implements Runnable{
 
     private Server(int port) throws NoSuchAlgorithmException {
         this.port = port;
-        keyPair = Key.generateKeyPairs(2048);
+        keyPair = Confidentiality.generateKeyPairs(2048);
     }
 
     public static Server getInstance(int port) throws NoSuchAlgorithmException, BindException {
