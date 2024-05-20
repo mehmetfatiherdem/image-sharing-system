@@ -1,12 +1,6 @@
 package controller;
 
-import dto.UserDTO;
-import helper.image.ImageDownloadData;
-import helper.security.UserCertificateCredentials;
 import service.ServerService;
-
-import java.security.PrivateKey;
-import java.util.ArrayList;
 
 public class ServerController {
     private final ServerService serverService;
@@ -14,16 +8,8 @@ public class ServerController {
         this.serverService = serverService;
     }
 
-    public void createCertificate(UserCertificateCredentials userCertificateCredentials, PrivateKey privateKey) {
-        serverService.createCertificate(userCertificateCredentials, privateKey);
-    }
-
-    public void sendImagePostNotification(ArrayList<UserDTO> onlineUsers, String imageName, String ownerUsername) {
-        serverService.sendImagePostNotification(onlineUsers, imageName, ownerUsername);
-    }
-
-    public void sendImage(ImageDownloadData imageDownloadData) {
-        serverService.sendImage(imageDownloadData);
+    public void handleRequests() {
+        serverService.handleRequests();
     }
 
 }

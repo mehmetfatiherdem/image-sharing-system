@@ -6,6 +6,8 @@ import helper.security.Authentication;
 import helper.security.UserCertificateCredentials;
 import repository.ServerRepository;
 
+import java.io.BufferedInputStream;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.Socket;
 import java.security.PrivateKey;
@@ -40,6 +42,32 @@ public class ServerServiceImpl implements ServerService {
         try {
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
             out.writeUTF(imageDownloadData.getMessageString());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void handleRequests() {
+        try {
+
+            DataInputStream in = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
+            DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+
+            while (true) {
+
+                String message = in.readUTF();
+                String[] messageParts = message.split(" ");
+
+                if (message.equals("ping")) {
+                    out.writeUTF("pong");
+                } else if (messageParts[0].equals("HELLO")) {
+                    out.writeUTF( "PUBLICKEY" + " " + serverRepository.getPublicKey().toString());
+                }
+                else {
+                    out.writeUTF("error");
+                }
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }

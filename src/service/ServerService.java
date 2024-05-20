@@ -11,4 +11,5 @@ public interface ServerService {
     void createCertificate(UserCertificateCredentials userCertificateCredentials, PrivateKey privateKey);
     void sendImagePostNotification(ArrayList<UserDTO> onlineUsers, String imageName, String ownerUsername);
     void sendImage(ImageDownloadData imageDownloadData);
+    void handleRequests();
 }

@@ -1,10 +1,11 @@
 package repository;
 
-import model.User;
+import dto.UserDTO;
 
 import java.security.PrivateKey;
+import java.util.Optional;
 
 public interface UserRepository {
-    User getUser(String username);
-    PrivateKey getPrivateKey(String username);
+    Optional<UserDTO> getUser(String username);
+    Optional<PrivateKey> getPrivateKey(String username); //FIXME: this should be in userlocal
 }

@@ -1,21 +1,18 @@
 package entity;
 
-import helper.security.Authentication;
-import helper.security.Confidentiality;
-
-import java.security.KeyPair;
+import model.Certificate;
 
 public class UserEntity {
     private String username;
     private byte[] password;
     private byte[] passwordSalt;
-    private KeyPair keyPair;
+    private Certificate certificate;
 
-    public UserEntity(String username, String password, byte[] passwordSalt, KeyPair keyPair) throws Exception {
+    public UserEntity(String username, byte[] password, byte[] passwordSalt, Certificate certificate) throws Exception {
         this.username = username;
-        this.password = Authentication.hashPassword(password, passwordSalt);
+        this.password = password;
         this.passwordSalt = passwordSalt;
-        this.keyPair = keyPair;
+        this.certificate = certificate;
     }
 
     // Getters and setters
@@ -31,7 +28,10 @@ public class UserEntity {
     public void setPasswordSalt(byte[] passwordSalt) {
         this.passwordSalt = passwordSalt;
     }
-    public KeyPair getKeyPair() {
-        return keyPair;
+    public Certificate getCertificate() {
+        return certificate;
+    }
+    public byte[] getPassword() {
+        return password;
     }
 }

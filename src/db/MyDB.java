@@ -2,6 +2,7 @@ package db;
 
 import dto.UserDTO;
 import entity.UserEntity;
+import model.Certificate;
 import model.User;
 
 import java.util.ArrayList;
@@ -31,10 +32,10 @@ public class MyDB {
         inMemoryUsers.add(userDTO);
     }
 
-    public void addPersistentUser(User user) {
+    public void addPersistentUser(String username, byte[] password, byte[] passwordSalt, Certificate certificate) {
         try{
             UserEntity userEntity =
-                    new UserEntity(user.getUsername(), user.getPassword(), user.getPasswordSalt(), user.getKeyPair());
+                    new UserEntity(username, password, passwordSalt, certificate);
             persistentUsers.add(userEntity);
         } catch (Exception e) {
             e.printStackTrace();

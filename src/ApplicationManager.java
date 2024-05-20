@@ -1,11 +1,15 @@
+import controller.AuthController;
+import dao.UserDao;
+import dao.UserDaoImpl;
 import db.MyDB;
 import helper.Constants;
 import model.Server;
+
+import repository.UserRepository;
+import repository.UserRepositoryImpl;
+import service.*;
 import socket.TCPClient;
 
-import java.io.BufferedInputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 
@@ -45,11 +49,7 @@ public class ApplicationManager {
         }
 
 
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+
 
         TCPClient client;
         try {
@@ -58,29 +58,15 @@ public class ApplicationManager {
             Thread clientThread = new Thread(client);
             clientThread.start();
 
-            System.out.println("ping");
-
             Thread.sleep(1000);
 
-            DataOutputStream out = new DataOutputStream(client.getSocket().getOutputStream());
-            out.writeUTF("ping");
+            UserDao userDao = new UserDaoImpl(myDB);
+            UserRepository userRepository = new UserRepositoryImpl(userDao);
+            AuthService authService = new AuthServiceImpl(userRepository, client.getSocket());
+            AuthController authController = new AuthController(authService);
 
-            DataInputStream in = new DataInputStream(new BufferedInputStream(client.getSocket().getInputStream()));
+            authController.register("admin", "admin");
 
-            if (in.readUTF().equals("pong")) {
-                System.out.println("pong");
-            } else {
-                System.out.println("error");
-            }
-
-            out.writeUTF("panic");
-            System.out.println("panic");
-
-            if (in.readUTF().equals("pong")) {
-                System.out.println("pong");
-            } else {
-                System.out.println("error");
-            }
 
         } catch (InterruptedException | IOException e) {
             throw new RuntimeException(e);

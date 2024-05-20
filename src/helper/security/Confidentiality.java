@@ -4,6 +4,8 @@ import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.*;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.Base64;
 
 public class Confidentiality {
     public static KeyPair generateKeyPairs(int keySize) throws NoSuchAlgorithmException {
@@ -53,6 +55,13 @@ public class Confidentiality {
         cipher.init(Cipher.DECRYPT_MODE, key);
         var e = new SecretKeySpec(cipher.doFinal(encryptedData), "AES");
         return e.getEncoded();
+    }
+
+    public static PublicKey getPublicKeyFromString(String key) throws Exception {
+        byte[] byteKey = Base64.getDecoder().decode(key);
+        X509EncodedKeySpec X509publicKey = new X509EncodedKeySpec(byteKey);
+        KeyFactory kf = KeyFactory.getInstance("RSA");
+        return kf.generatePublic(X509publicKey);
     }
 
 }

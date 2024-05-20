@@ -1,10 +1,11 @@
 package model;
 
+import controller.ServerController;
+import dao.ServerDaoImpl;
 import helper.security.Confidentiality;
+import repository.ServerRepositoryImpl;
+import service.ServerServiceImpl;
 
-import java.io.BufferedInputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.net.BindException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -39,20 +40,14 @@ public class Server implements Runnable{
 
             socket = serverSocket.accept();
 
+            System.out.println("Server started listening on port " + port);
 
-           DataInputStream in = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
-           DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+            ServerDaoImpl serverDao = new ServerDaoImpl();
+            ServerRepositoryImpl serverRepository = new ServerRepositoryImpl(serverDao);
+            ServerServiceImpl serverService = new ServerServiceImpl(serverRepository, socket);
+            ServerController serverController = new ServerController(serverService);
 
-
-            while (true) {
-                String message = in.readUTF();
-                if (message.equals("ping")) {
-                    out.writeUTF("pong");
-                } else {
-                    out.writeUTF("error");
-                }
-            }
-
+            serverController.handleRequests();
 
 
         } catch (Exception e) {

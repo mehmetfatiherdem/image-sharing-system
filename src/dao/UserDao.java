@@ -1,10 +1,12 @@
 package dao;
 
+import dto.UserDTO;
 import model.User;
 
 import java.security.PrivateKey;
+import java.util.Optional;
 
 public interface UserDao {
-    User getUser(String username);
-    PrivateKey getPrivateKey(String username);
+    Optional<UserDTO> getUser(String username);
+    Optional<PrivateKey> getPrivateKey(String username);
 }

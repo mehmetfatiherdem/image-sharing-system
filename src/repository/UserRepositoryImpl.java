@@ -1,9 +1,10 @@
 package repository;
 
 import dao.UserDao;
-import model.User;
+import dto.UserDTO;
 
 import java.security.PrivateKey;
+import java.util.Optional;
 
 public class UserRepositoryImpl implements UserRepository{
     private final UserDao userDao;
@@ -13,12 +14,12 @@ public class UserRepositoryImpl implements UserRepository{
     }
 
     @Override
-    public User getUser(String username) {
+    public Optional<UserDTO> getUser(String username) {
         return userDao.getUser(username);
     }
 
     @Override
-    public PrivateKey getPrivateKey(String username) {
+    public Optional<PrivateKey> getPrivateKey(String username) {
         return userDao.getPrivateKey(username);
     }
 }
