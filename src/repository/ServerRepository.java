@@ -1,8 +1,10 @@
 package repository;
 
+import java.security.PrivateKey;
 import java.security.PublicKey;
 
 public interface ServerRepository {
     void addCertificate(byte[] certificate);
     PublicKey getPublicKey();
+    PrivateKey getPrivateKey();
 }

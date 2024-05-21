@@ -1,29 +1,34 @@
 package userlocal;
 
-import model.User;
-
-import java.security.PublicKey;
-
 // trying to imitate users own machines to store private key and stuff
 public class UserStorage {
-    private User user;
 
-    private PublicKey serverPublicKey;
+    private static UserStorage instance;
+    private byte[] serverPublicKey;
+    private byte[] privateKey;
 
-    public UserStorage(User user, PublicKey serverPublicKey) {
-        this.user = user;
-        this.serverPublicKey = serverPublicKey;
+    public UserStorage() {
     }
 
-    public User getUser() {
-        return user;
+    public static UserStorage getInstance() {
+        if (instance == null) {
+            instance = new UserStorage();
+        }
+        return instance;
     }
 
-    public PublicKey getServerPublicKey() {
+    // Getters and setters
+    public byte[] getServerPublicKey() {
         return serverPublicKey;
     }
-
-
-
+    public void setServerPublicKey(byte[] serverPublicKey) {
+        this.serverPublicKey = serverPublicKey;
+    }
+    public byte[] getPrivateKey() {
+        return privateKey;
+    }
+    public void setPrivateKey(byte[] privateKey) {
+        this.privateKey = privateKey;
+    }
 
 }

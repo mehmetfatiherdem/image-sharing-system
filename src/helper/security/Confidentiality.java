@@ -4,6 +4,7 @@ import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.*;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
@@ -44,24 +45,52 @@ public class Confidentiality {
         return cipher.doFinal(data);
     }
 
-    public static byte[] encryptWithSymmetricKey(byte[] data, PublicKey key) throws Exception {
+    public static byte[] encryptWithPublicKey(byte[] message, PublicKey publicKey) throws Exception {
         Cipher cipher = Cipher.getInstance("RSA");
-        cipher.init(Cipher.ENCRYPT_MODE, key);
-        return cipher.doFinal(data);
+        cipher.init(Cipher.ENCRYPT_MODE, publicKey);
+        return cipher.doFinal(message);
     }
 
-    public static byte[] decryptWithSymmetricKey(byte[] encryptedData, PrivateKey key) throws Exception {
+
+    public static byte[] decryptWithPrivateKey(byte[] encryptedData, PrivateKey privateKey) throws Exception {
         Cipher cipher = Cipher.getInstance("RSA");
-        cipher.init(Cipher.DECRYPT_MODE, key);
-        var e = new SecretKeySpec(cipher.doFinal(encryptedData), "AES");
-        return e.getEncoded();
+        cipher.init(Cipher.DECRYPT_MODE, privateKey);
+        return cipher.doFinal(encryptedData);
     }
+
 
     public static PublicKey getPublicKeyFromString(String key) throws Exception {
         byte[] byteKey = Base64.getDecoder().decode(key);
         X509EncodedKeySpec X509publicKey = new X509EncodedKeySpec(byteKey);
         KeyFactory kf = KeyFactory.getInstance("RSA");
         return kf.generatePublic(X509publicKey);
+    }
+
+    public static PrivateKey getPrivateKeyFromString(String key) throws Exception {
+        byte[] byteKey = Base64.getDecoder().decode(key);
+        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(byteKey);
+        KeyFactory kf = KeyFactory.getInstance("RSA");
+        return kf.generatePrivate(keySpec);
+    }
+
+    public static PublicKey getPublicKeyFromByteArray(byte[] key) throws Exception {
+        X509EncodedKeySpec X509publicKey = new X509EncodedKeySpec(key);
+        KeyFactory kf = KeyFactory.getInstance("RSA");
+        return kf.generatePublic(X509publicKey);
+    }
+
+    public static PrivateKey getPrivateKeyFromByteArray(byte[] key) throws Exception {
+        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(key);
+        KeyFactory kf = KeyFactory.getInstance("RSA");
+        return kf.generatePrivate(keySpec);
+    }
+
+    public static byte[] getByteArrayFromPublicKey(PublicKey key) {
+        return key.getEncoded();
+    }
+
+    public static byte[] getByteArrayFromPrivateKey(PrivateKey key) {
+        return key.getEncoded();
     }
 
 }

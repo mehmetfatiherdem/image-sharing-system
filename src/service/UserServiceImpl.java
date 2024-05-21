@@ -53,7 +53,7 @@ public class UserServiceImpl implements UserService {
             byte[] digitalSignature = Authentication.sign(imageHash, userPrivateKey);
 
             // encrypt the AES key with the server's public key
-            byte[] encryptedAESKey = Confidentiality.encryptWithSymmetricKey(aesKey.getEncoded(), serverPublicKey);
+            byte[] encryptedAESKey = Confidentiality.encryptWithPublicKey(aesKey.getEncoded(), serverPublicKey);
 
             ImagePostData imagePostData = new ImagePostData(imageName, encryptedImageBytes, digitalSignature, encryptedAESKey, iv);
 

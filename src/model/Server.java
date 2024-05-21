@@ -1,9 +1,13 @@
 package model;
 
 import controller.ServerController;
+import dao.ServerDao;
 import dao.ServerDaoImpl;
 import helper.security.Confidentiality;
+import repository.ServerRepository;
 import repository.ServerRepositoryImpl;
+import serverlocal.ServerStorage;
+import service.ServerService;
 import service.ServerServiceImpl;
 
 import java.net.BindException;
@@ -20,6 +24,7 @@ public class Server implements Runnable{
     private final int port;
     private ServerSocket serverSocket;
     private Socket socket;
+    private ServerStorage serverStorage;
 
     private Server(int port) throws NoSuchAlgorithmException {
         this.port = port;
@@ -42,9 +47,9 @@ public class Server implements Runnable{
 
             System.out.println("Server started listening on port " + port);
 
-            ServerDaoImpl serverDao = new ServerDaoImpl();
-            ServerRepositoryImpl serverRepository = new ServerRepositoryImpl(serverDao);
-            ServerServiceImpl serverService = new ServerServiceImpl(serverRepository, socket);
+            ServerDao serverDao = new ServerDaoImpl();
+            ServerRepository serverRepository = new ServerRepositoryImpl(serverDao);
+            ServerService serverService = new ServerServiceImpl(serverRepository, socket);
             ServerController serverController = new ServerController(serverService);
 
             serverController.handleRequests();
@@ -56,9 +61,14 @@ public class Server implements Runnable{
     }
 
     public void fireUp() {
+        serverStorage = ServerStorage.getInstance();
+        serverStorage.setPrivateKey(Confidentiality.getByteArrayFromPrivateKey(keyPair.getPrivate()));
+        serverStorage.setPublicKey(Confidentiality.getByteArrayFromPublicKey(keyPair.getPublic()));
         Thread serverThread = new Thread(this);
         serverThread.start();
     }
+
+
 
     // Getters
     public int getPort() {
@@ -72,6 +82,14 @@ public class Server implements Runnable{
     }
     public PublicKey getPublicKey() {
         return keyPair.getPublic();
+    }
+    public ServerStorage getServerStorage() {
+        return serverStorage;
+    }
+
+    // Setters
+    public void setServerStorage(ServerStorage serverStorage) {
+        this.serverStorage = serverStorage;
     }
 
 }

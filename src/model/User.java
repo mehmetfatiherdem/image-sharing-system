@@ -2,6 +2,7 @@ package model;
 
 import helper.security.Authentication;
 import helper.security.Confidentiality;
+import userlocal.UserStorage;
 
 import java.security.KeyPair;
 
@@ -10,6 +11,7 @@ public class User {
     private String password;
     private byte[] passwordSalt;
     private KeyPair keyPair;
+    private UserStorage userStorage;
 
     public User(String username, String password) {
         this.username = username;
@@ -20,7 +22,11 @@ public class User {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        userStorage = UserStorage.getInstance();
+        userStorage.setPrivateKey(Confidentiality.getByteArrayFromPrivateKey(keyPair.getPrivate()));
     }
+
 
     // Getters and setters
     public String getUsername() {
@@ -40,6 +46,12 @@ public class User {
     }
     public String getPassword() {
         return password;
+    }
+    public UserStorage getUserStorage() {
+        return userStorage;
+    }
+    public void setUserStorage(UserStorage userStorage) {
+        this.userStorage = userStorage;
     }
 
 }

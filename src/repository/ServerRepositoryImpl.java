@@ -2,6 +2,7 @@ package repository;
 
 import dao.ServerDao;
 
+import java.security.PrivateKey;
 import java.security.PublicKey;
 
 public class ServerRepositoryImpl implements ServerRepository{
@@ -17,5 +18,10 @@ public class ServerRepositoryImpl implements ServerRepository{
     @Override
     public PublicKey getPublicKey() {
         return serverDao.getServerPublicKey();
+    }
+
+    @Override
+    public PrivateKey getPrivateKey() {
+        return serverDao.getServerPrivateKey();
     }
 }
