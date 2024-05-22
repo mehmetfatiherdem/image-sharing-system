@@ -2,7 +2,6 @@ package helper.security;
 
 import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
 import java.security.*;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
@@ -93,4 +92,21 @@ public class Confidentiality {
         return key.getEncoded();
     }
 
+    public static String getPublicKeyAsString(PublicKey key) {
+        return Base64.getEncoder().encodeToString(key.getEncoded());
+    }
+
+    public static String getPrivateKeyAsString(PrivateKey key) {
+        return Base64.getEncoder().encodeToString(key.getEncoded());
+    }
+
+    // decode public and privatekey
+    public static byte[] decodeStringKeyToByteBase64(String key) {
+        return Base64.getDecoder().decode(key);
+    }
+
+    // convert byte to string with base64
+    public static String encodeByteKeyToStringBase64(byte[] key) {
+        return Base64.getEncoder().encodeToString(key);
+    }
 }

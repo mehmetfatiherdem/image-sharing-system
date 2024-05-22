@@ -87,6 +87,11 @@ public class Server implements Runnable{
         return serverStorage;
     }
 
+    // remove this
+    public KeyPair getKeyPair() {
+        return keyPair;
+    }
+
     // Setters
     public void setServerStorage(ServerStorage serverStorage) {
         this.serverStorage = serverStorage;

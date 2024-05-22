@@ -64,6 +64,8 @@ public class UserServiceImpl implements UserService {
 
                 var macKey = Authentication.generateMACKey();
                 var mac = Authentication.generateMAC(imagePostData.getMessageString().getBytes(), macKey);
+
+                //FIXME: we changed message format to json-like so change this
                 var message = Authentication.appendMACToMessage(imagePostData.getMessageString().getBytes(), mac);
 
                 out.writeUTF(message);
