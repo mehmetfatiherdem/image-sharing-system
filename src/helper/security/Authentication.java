@@ -1,5 +1,6 @@
 package helper.security;
 
+import javax.crypto.KeyAgreement;
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
@@ -26,13 +27,21 @@ public class Authentication {
         return sign.verify(signature);
     }
 
-    //TODO: consider using Diffie-Hellman key exchange
     public static byte[] generateMACKey() throws Exception {
         SecureRandom random = SecureRandom.getInstanceStrong();
         byte[] keyBytes = new byte[16];
         random.nextBytes(keyBytes);
         return keyBytes;
     }
+
+    // diffie helman key generation
+    public static byte[] generateSharedSecret(PrivateKey privateKey, PublicKey publicKey) throws Exception {
+        KeyAgreement keyAgreement = KeyAgreement.getInstance("DH");
+        keyAgreement.init(privateKey);
+        keyAgreement.doPhase(publicKey, true);
+        return keyAgreement.generateSecret();
+    }
+
 
     public static byte[] generateMAC(byte[] message, byte[] key) throws Exception {
         Mac mac = Mac.getInstance("HmacSHA256");

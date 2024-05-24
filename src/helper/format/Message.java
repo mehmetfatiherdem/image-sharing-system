@@ -5,7 +5,6 @@ import java.util.Map;
 
 public class Message {
 
-    // now write formatters and parsers
     /*
         message format:
         {

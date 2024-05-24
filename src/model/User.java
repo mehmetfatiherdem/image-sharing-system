@@ -18,7 +18,7 @@ public class User {
         this.password = password;
         try {
             this.passwordSalt = Authentication.generateSalt();
-            this.keyPair = Confidentiality.generateKeyPairs(2048);
+            this.keyPair = Confidentiality.generateRSAKeyPairs(2048);
         } catch (Exception e) {
             e.printStackTrace();
         }

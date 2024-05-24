@@ -120,14 +120,6 @@ public class AuthServiceImpl implements AuthService {
             // send MAC key to server
             byte[] macKey = Authentication.generateMACKey();
 
-            System.out.println("[client] MAC key: " + Arrays.toString(macKey));
-
-            byte[] encryptedMacKey = Confidentiality.encryptWithPublicKey(macKey, serverPublicKey);
-            String macKeyString = "MAC" + " " + "Secretmsg123!" + " " + Arrays.toString(encryptedMacKey);
-
-            out.writeUTF(macKeyString);
-
-            /*
             byte[] encryptedMacKey = Confidentiality.encryptWithPublicKey(macKey, serverPublicKey);
             String macKeyString = Message.formatMessage("MAC", new String[]{"secretMessage", "macKey"},
                     new String[]{"Secretmsg123!", Confidentiality.encodeByteKeyToStringBase64(encryptedMacKey)});
@@ -136,7 +128,7 @@ public class AuthServiceImpl implements AuthService {
             out.writeUTF(macKeyString);
 
 
-             */
+
 
 
             /*

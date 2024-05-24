@@ -28,7 +28,8 @@ public class Server implements Runnable{
 
     private Server(int port) throws NoSuchAlgorithmException {
         this.port = port;
-        keyPair = Confidentiality.generateKeyPairs(2048);
+        keyPair = Confidentiality.generateRSAKeyPairs(2048);
+        // keyPair = Confidentiality.generateDHKeyPairs();
     }
 
     public static Server getInstance(int port) throws NoSuchAlgorithmException, BindException {

@@ -1,17 +1,38 @@
 package helper.security;
 
 import javax.crypto.*;
+import javax.crypto.spec.DHParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
 import java.security.*;
+import java.security.spec.InvalidParameterSpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
 public class Confidentiality {
-    public static KeyPair generateKeyPairs(int keySize) throws NoSuchAlgorithmException {
+    public static KeyPair generateRSAKeyPairs(int keySize) throws NoSuchAlgorithmException {
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
         keyPairGenerator.initialize(keySize);
         return keyPairGenerator.generateKeyPair();
+    }
+
+    public static KeyPair generateDHKeyPairs() throws NoSuchAlgorithmException, InvalidParameterSpecException, InvalidAlgorithmParameterException {
+        AlgorithmParameterGenerator paramGen = AlgorithmParameterGenerator.getInstance("DH");
+        paramGen.init(2048); // 2048-bit key size
+        AlgorithmParameters params = paramGen.generateParameters();
+        DHParameterSpec dhSpec = params.getParameterSpec(DHParameterSpec.class);
+
+        // Generate the key pair
+        KeyPairGenerator keyPairGen = KeyPairGenerator.getInstance("DH");
+        keyPairGen.initialize(dhSpec);
+        return keyPairGen.generateKeyPair();
+    }
+
+    public static byte[] generateSharedDHSecret(PrivateKey privateKey, PublicKey publicKey) throws Exception {
+        KeyAgreement keyAgreement = KeyAgreement.getInstance("DH");
+        keyAgreement.init(privateKey);
+        keyAgreement.doPhase(publicKey, true);
+        return keyAgreement.generateSecret();
     }
 
     public static SecretKey generateAESKey(int keySize) throws NoSuchAlgorithmException {
