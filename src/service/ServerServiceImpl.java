@@ -6,6 +6,7 @@ import helper.image.ImageDownloadData;
 import helper.security.Authentication;
 import helper.security.Confidentiality;
 import helper.security.UserCertificateCredentials;
+import model.Certificate;
 import repository.ServerRepository;
 
 import java.io.BufferedInputStream;
@@ -27,10 +28,10 @@ public class ServerServiceImpl implements ServerService {
         this.socket = socket;
     }
     @Override
-    public void createCertificate(UserCertificateCredentials userCertificateCredentials, PrivateKey privateKey) {
+    public void createCertificate(UserCertificateCredentials userCertificateCredentials, PrivateKey privateKey, String ip) {
         try{
             byte[] certificate = Authentication.sign(userCertificateCredentials.getCredentialBytes(), privateKey);
-            serverRepository.addCertificate(certificate);
+            serverRepository.addCertificate(new Certificate(userCertificateCredentials, certificate), ip);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -99,18 +100,37 @@ public class ServerServiceImpl implements ServerService {
                 if (message.equals("ping")) {
                     out.writeUTF("pong");
                 } else if (messageKeyValues.get("message").equals("HELLO")) {
-                    String publicKeyMessage = Message.formatMessage("PUBLICKEY", new String[]{"publicKey"}, new String[]{Confidentiality.encodeByteKeyToStringBase64(serverRepository.getPublicKey().getEncoded())});
-                    //System.out.println("public key server sent: " + Arrays.toString(serverRepository.getPublicKey().toString().getBytes()));
-
-                    /*
-                    X509EncodedKeySpec X509publicKey = new X509EncodedKeySpec(Arrays.toString(serverRepository.getPublicKey().getEncoded()).getBytes());
-                    KeyFactory kf = KeyFactory.getInstance("RSA");
-                    PublicKey pb = kf.generatePublic(X509publicKey);
-
-                     */
 
 
-                   out.writeUTF(publicKeyMessage);
+                    if (serverRepository.getNoncesUsed(messageKeyValues.get("ip")) != null &&
+                            serverRepository.getNoncesUsed(messageKeyValues.get("ip")).contains(messageKeyValues.get("nonce"))) {
+                        System.out.println("[server] Nonce already used REPLAY ATTACK ALERT!!!: " + messageKeyValues.get("nonce"));
+
+
+                    } else {
+                        //TODO: GENERATE SERVER NONCE AND SEND IT
+                        
+                        serverRepository.addUser(new UserDTO(messageKeyValues.get("ip")));
+                        serverRepository.addNonceUsed(messageKeyValues.get("ip"), messageKeyValues.get("nonce"));
+                        System.out.println("[server] Nonce added to list: " + messageKeyValues.get("nonce"));
+                        System.out.println("[server] ip: " + messageKeyValues.get("ip"));
+                        //String nonceServer = Authentication.generateNonce();
+                        String publicKeyMessage = Message.formatMessage("PUBLICKEY", new String[]{"publicKey", "ip"},
+                                new String[]{Confidentiality.encodeByteKeyToStringBase64(serverRepository.getPublicKey().getEncoded()), messageKeyValues.get("ip")});
+                        //System.out.println("public key server sent: " + Arrays.toString(serverRepository.getPublicKey().toString().getBytes()));
+
+                        /*
+                        X509EncodedKeySpec X509publicKey = new X509EncodedKeySpec(Arrays.toString(serverRepository.getPublicKey().getEncoded()).getBytes());
+                        KeyFactory kf = KeyFactory.getInstance("RSA");
+                        PublicKey pb = kf.generatePublic(X509publicKey);
+
+                         */
+
+
+                        out.writeUTF(publicKeyMessage);
+                    }
+
+
                 }
 
 
@@ -121,7 +141,7 @@ public class ServerServiceImpl implements ServerService {
                     System.out.println("decrypted: " + Confidentiality.encodeByteKeyToStringBase64(Confidentiality.decryptWithPrivateKey(Confidentiality.decodeStringKeyToByteBase64(messageKeyValues.get("macKey")), serverRepository.getPrivateKey())));
                     */
 
-                    var mac = Confidentiality.decryptWithPrivateKey(Confidentiality.decodeStringKeyToByteBase64(messageKeyValues.get("macKey")),
+                    var mac = Confidentiality.decryptWithPrivateKey(Confidentiality.decodeStringKeyToByteBase64(messageKeyValues.get("pms")),
                             serverRepository.getPrivateKey());
 
                     MAC = Authentication.generateMAC(messageKeyValues.get("secretMessage").getBytes(),

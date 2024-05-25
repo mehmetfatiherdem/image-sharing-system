@@ -1,8 +1,12 @@
 package userlocal;
 
+import java.util.HashSet;
+import java.util.Set;
+
 // trying to imitate users own machines to store private key and stuff
 public class UserStorage {
 
+    private Set<String> serverNoncesUsed = new HashSet<>();
     private static UserStorage instance;
     private byte[] serverPublicKey;
     private byte[] privateKey;
@@ -29,6 +33,12 @@ public class UserStorage {
     }
     public void setPrivateKey(byte[] privateKey) {
         this.privateKey = privateKey;
+    }
+    public Set<String> getServerNoncesUsed() {
+        return serverNoncesUsed;
+    }
+    public void addServerNonceUsed(String nonce) {
+        serverNoncesUsed.add(nonce);
     }
 
 }

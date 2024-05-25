@@ -7,6 +7,7 @@ import userlocal.UserStorage;
 import java.security.KeyPair;
 
 public class User {
+    private final String IP;
     private String username;
     private String password;
     private byte[] passwordSalt;
@@ -25,6 +26,7 @@ public class User {
 
         userStorage = UserStorage.getInstance();
         userStorage.setPrivateKey(Confidentiality.getByteArrayFromPrivateKey(keyPair.getPrivate()));
+        this.IP = Authentication.generateIP();
     }
 
 
@@ -53,5 +55,7 @@ public class User {
     public void setUserStorage(UserStorage userStorage) {
         this.userStorage = userStorage;
     }
-
+    public String getIP() {
+        return IP;
+    }
 }

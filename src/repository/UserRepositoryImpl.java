@@ -5,6 +5,7 @@ import dto.UserDTO;
 
 import java.security.PrivateKey;
 import java.util.Optional;
+import java.util.Set;
 
 public class UserRepositoryImpl implements UserRepository{
     private final UserDao userDao;
@@ -21,5 +22,14 @@ public class UserRepositoryImpl implements UserRepository{
     @Override
     public Optional<PrivateKey> getPrivateKey(String username) {
         return userDao.getPrivateKey(username);
+    }
+
+    @Override
+    public void addServerNonce(String ip, String nonce) {
+        userDao.addServerNonce(ip, nonce);
+    }
+    @Override
+    public Set<String> getServerNonces(String ip) {
+        return userDao.getServerNonces(ip);
     }
 }

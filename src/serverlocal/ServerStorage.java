@@ -30,6 +30,9 @@ public class ServerStorage {
     public List<UserDTO> getUsers() {
         return users;
     }
+    public void addUsers(List<UserDTO> users) {
+        this.users.addAll(users);
+    }
     public byte[] getPrivateKey() {
         return privateKey;
     }

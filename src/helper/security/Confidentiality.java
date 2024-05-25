@@ -35,6 +35,7 @@ public class Confidentiality {
         return keyAgreement.generateSecret();
     }
 
+    // this is also pms
     public static SecretKey generateAESKey(int keySize) throws NoSuchAlgorithmException {
         KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
         keyGenerator.init(keySize);

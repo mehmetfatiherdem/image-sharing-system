@@ -3,6 +3,7 @@ package entity;
 import model.Certificate;
 
 public class UserEntity {
+    private String IP;
     private String username;
     private byte[] password;
     private byte[] passwordSalt;
@@ -33,5 +34,11 @@ public class UserEntity {
     }
     public byte[] getPassword() {
         return password;
+    }
+    public String getIP() {
+        return IP;
+    }
+    public void setIP(String IP) {
+        this.IP = IP;
     }
 }
