@@ -47,8 +47,10 @@ public class Server implements Runnable{
             socket = serverSocket.accept();
 
             System.out.println("Server started listening on port " + port);
-
-            ServerDao serverDao = new ServerDaoImpl();
+            serverStorage = ServerStorage.getInstance();
+            serverStorage.setPrivateKey(Confidentiality.getByteArrayFromPrivateKey(keyPair.getPrivate()));
+            serverStorage.setPublicKey(Confidentiality.getByteArrayFromPublicKey(keyPair.getPublic()));
+            ServerDao serverDao = new ServerDaoImpl(serverStorage);
             ServerRepository serverRepository = new ServerRepositoryImpl(serverDao);
             ServerService serverService = new ServerServiceImpl(serverRepository, socket);
             ServerController serverController = new ServerController(serverService);
@@ -62,9 +64,7 @@ public class Server implements Runnable{
     }
 
     public void fireUp() {
-        serverStorage = ServerStorage.getInstance();
-        serverStorage.setPrivateKey(Confidentiality.getByteArrayFromPrivateKey(keyPair.getPrivate()));
-        serverStorage.setPublicKey(Confidentiality.getByteArrayFromPublicKey(keyPair.getPublic()));
+
         Thread serverThread = new Thread(this);
         serverThread.start();
     }

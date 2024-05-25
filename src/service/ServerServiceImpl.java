@@ -9,6 +9,8 @@ import helper.security.UserCertificateCredentials;
 import model.Certificate;
 import repository.ServerRepository;
 
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -59,7 +61,9 @@ public class ServerServiceImpl implements ServerService {
 
             DataInputStream in = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-            byte[] MAC;
+
+            //TODO: make MAC to be communication and ip specific in-memory
+            byte[] MAC = new byte[16];
 
             while (true) {
 
@@ -146,7 +150,7 @@ public class ServerServiceImpl implements ServerService {
                     System.out.println("decrypted: " + Confidentiality.encodeByteKeyToStringBase64(Confidentiality.decryptWithPrivateKey(Confidentiality.decodeStringKeyToByteBase64(messageKeyValues.get("macKey")), serverRepository.getPrivateKey())));
                     */
 
-                    var mac = Confidentiality.decryptWithPrivateKey(Confidentiality.decodeStringKeyToByteBase64(messageKeyValues.get("pms")),
+                    var mac = Confidentiality.decryptWithPrivateKey(Confidentiality.decodeStringKeyToByteBase64(messageKeyValues.get("macKey")),
                             serverRepository.getPrivateKey());
 
                     MAC = Authentication.generateMAC(messageKeyValues.get("secretMessage").getBytes(),
@@ -155,6 +159,26 @@ public class ServerServiceImpl implements ServerService {
 
 
 
+                } else if (messageKeyValues.get("message").equals("REGISTER")) {
+                    // check MAC to see integrity and authentication
+                    if (Arrays.equals(MAC, Confidentiality.decryptWithPrivateKey(Confidentiality.decodeStringKeyToByteBase64(messageKeyValues.get("mac")), serverRepository.getPrivateKey()))) {
+                        System.out.println("MAC verified");
+
+                        var retrievedIV = Confidentiality.decryptWithPrivateKey(Confidentiality.decodeStringKeyToByteBase64(messageKeyValues.get("iv")),
+                                serverRepository.getPrivateKey());
+                        var retrievedAESKey = Confidentiality.decryptWithPrivateKey(Confidentiality.decodeStringKeyToByteBase64(messageKeyValues.get("aesKey")),
+                                serverRepository.getPrivateKey());
+                        SecretKey aesKey =new SecretKeySpec(retrievedAESKey, 0, retrievedAESKey.length, "AES");
+                        var retrievedPassword = Confidentiality.decryptWithAES(Confidentiality.decodeStringKeyToByteBase64(messageKeyValues.get("password")),
+                               aesKey, retrievedIV);
+
+                        System.out.println("[server] Password received: " + new String(retrievedPassword));
+
+                        //TODO: create certificate etc. and send store etc.
+
+                    } else {
+                        System.out.println("MAC not verified");
+                    }
                 }
 
                  else {

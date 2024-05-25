@@ -14,8 +14,8 @@ public class ServerDaoImpl implements ServerDao{
 
     private final ServerStorage serverStorage;
 
-    public ServerDaoImpl() {
-        serverStorage = ServerStorage.getInstance();
+    public ServerDaoImpl(ServerStorage serverStorage) {
+        this.serverStorage = serverStorage;
     }
 
     public void saveCertificate(Certificate certificate, String ip) {
