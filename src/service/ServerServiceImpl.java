@@ -161,7 +161,7 @@ public class ServerServiceImpl implements ServerService {
 
                 } else if (messageKeyValues.get("message").equals("REGISTER")) {
                     // check MAC to see integrity and authentication
-                    if (Arrays.equals(MAC, Confidentiality.decryptWithPrivateKey(Confidentiality.decodeStringKeyToByteBase64(messageKeyValues.get("mac")), serverRepository.getPrivateKey()))) {
+                    if (Arrays.equals(MAC, Confidentiality.decodeStringKeyToByteBase64(messageKeyValues.get("mac")))) {
                         System.out.println("MAC verified");
 
                         var retrievedIV = Confidentiality.decryptWithPrivateKey(Confidentiality.decodeStringKeyToByteBase64(messageKeyValues.get("iv")),
