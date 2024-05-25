@@ -146,12 +146,14 @@ public class AuthServiceImpl implements AuthService {
             var encryptedPassword = Confidentiality.encryptWithAES(password.getBytes(), aesKey, iv);
             var encryptedIv = Confidentiality.encryptWithPublicKey(iv, serverPublicKey);
             var encryptedAesKey = Confidentiality.encryptWithPublicKey(aesKey.getEncoded(), serverPublicKey);
+            var encryptedSalt = Confidentiality.encryptWithPublicKey(user.getPasswordSalt(), serverPublicKey);
 
             String message = Message.formatMessage("REGISTER", new String[]{"username", "password", "salt", "publicKey", "mac", "ip", "aesKey", "iv"},
-                    new String[]{username, password, Confidentiality.encodeByteKeyToStringBase64(user.getPasswordSalt()),
-                            Confidentiality.encodeByteKeyToStringBase64(user.getKeyPair().getPublic().getEncoded()),
+                    new String[]{username, Confidentiality.encodeByteKeyToStringBase64(encryptedPassword), Confidentiality.encodeByteKeyToStringBase64(encryptedSalt),
+                            user.getKeyPair().getPublic().toString(),
                                 Confidentiality.encodeByteKeyToStringBase64(MAC), user.getIP(),
-                                Confidentiality.encodeByteKeyToStringBase64(encryptedAesKey), Confidentiality.encodeByteKeyToStringBase64(encryptedIv)});
+                                    Confidentiality.encodeByteKeyToStringBase64(encryptedAesKey),
+                                        Confidentiality.encodeByteKeyToStringBase64(encryptedIv)});
 
 
 

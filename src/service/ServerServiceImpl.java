@@ -168,6 +168,8 @@ public class ServerServiceImpl implements ServerService {
                                 serverRepository.getPrivateKey());
                         var retrievedAESKey = Confidentiality.decryptWithPrivateKey(Confidentiality.decodeStringKeyToByteBase64(messageKeyValues.get("aesKey")),
                                 serverRepository.getPrivateKey());
+                        var retrievedSalt = Confidentiality.decryptWithPrivateKey(Confidentiality.decodeStringKeyToByteBase64(messageKeyValues.get("salt")),
+                                serverRepository.getPrivateKey());
                         SecretKey aesKey =new SecretKeySpec(retrievedAESKey, 0, retrievedAESKey.length, "AES");
                         var retrievedPassword = Confidentiality.decryptWithAES(Confidentiality.decodeStringKeyToByteBase64(messageKeyValues.get("password")),
                                aesKey, retrievedIV);
