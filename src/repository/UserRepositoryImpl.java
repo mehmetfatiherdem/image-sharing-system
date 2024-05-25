@@ -32,4 +32,9 @@ public class UserRepositoryImpl implements UserRepository{
     public Set<String> getServerNonces(String ip) {
         return userDao.getServerNonces(ip);
     }
+
+    @Override
+    public void addUser(UserDTO user) {
+        userDao.addUser(user);
+    }
 }

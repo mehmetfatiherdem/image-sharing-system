@@ -24,6 +24,10 @@ public class UserDTO {
     public UserDTO(String ip) {
         this.IP = ip;
     }
+    public UserDTO(String ip, UserStorage userStorage) {
+        this.IP = ip;
+        this.userStorage = userStorage;
+    }
     public UserDTO(String username, byte[] password) {
         this.username = username;
         this.password = password;

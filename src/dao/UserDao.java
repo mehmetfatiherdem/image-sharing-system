@@ -12,4 +12,5 @@ public interface UserDao {
     Optional<PrivateKey> getPrivateKey(String username);
     void addServerNonce(String ip, String nonce);
     Set<String> getServerNonces(String ip);
+    void addUser(UserDTO user);
 }

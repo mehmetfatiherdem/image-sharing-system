@@ -108,15 +108,16 @@ public class ServerServiceImpl implements ServerService {
 
 
                     } else {
-                        //TODO: GENERATE SERVER NONCE AND SEND IT
-                        
+
+                        String nonceServer = Authentication.generateNonce();
+
                         serverRepository.addUser(new UserDTO(messageKeyValues.get("ip")));
                         serverRepository.addNonceUsed(messageKeyValues.get("ip"), messageKeyValues.get("nonce"));
                         System.out.println("[server] Nonce added to list: " + messageKeyValues.get("nonce"));
                         System.out.println("[server] ip: " + messageKeyValues.get("ip"));
                         //String nonceServer = Authentication.generateNonce();
-                        String publicKeyMessage = Message.formatMessage("PUBLICKEY", new String[]{"publicKey", "ip"},
-                                new String[]{Confidentiality.encodeByteKeyToStringBase64(serverRepository.getPublicKey().getEncoded()), messageKeyValues.get("ip")});
+                        String publicKeyMessage = Message.formatMessage("PUBLICKEY", new String[]{"publicKey", "ip", "nonce"},
+                                new String[]{Confidentiality.encodeByteKeyToStringBase64(serverRepository.getPublicKey().getEncoded()), messageKeyValues.get("ip"), nonceServer});
                         //System.out.println("public key server sent: " + Arrays.toString(serverRepository.getPublicKey().toString().getBytes()));
 
                         /*
@@ -126,6 +127,10 @@ public class ServerServiceImpl implements ServerService {
 
                          */
 
+
+                        out.writeUTF(publicKeyMessage);
+
+                       // Thread.sleep(1000);
 
                         out.writeUTF(publicKeyMessage);
                     }

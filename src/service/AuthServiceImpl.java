@@ -1,6 +1,7 @@
 package service;
 
 import dto.LoginDTO;
+import dto.UserDTO;
 import helper.format.Message;
 import helper.security.Authentication;
 import helper.security.Confidentiality;
@@ -73,6 +74,8 @@ public class AuthServiceImpl implements AuthService {
 
             User user = new User(username, password);
 
+            userRepository.addUser(new UserDTO(user.getIP(), user.getUserStorage()));
+
             String helloMsg = Message.formatMessage("HELLO", new String[]{"nonce", "ip"},
                     new String[]{nonceClient, user.getIP()});
 
@@ -88,37 +91,29 @@ public class AuthServiceImpl implements AuthService {
             var messageKeyValues = Message.getKeyValuePairs(serverResponse);
 
 
-            /*
-            System.out.println("client received key: \n");
-
-            for (Map.Entry<String, String> entry : messageKeyValues.entrySet()) {
-                System.out.println(entry.getKey() + " : " + entry.getValue() + "\n");
-            }
-
-
-             */
-
-
             if (messageKeyValues.get("message").equals("PUBLICKEY")) {
-            /*
-                for (Map.Entry<String, String> entry : messageKeyValues.entrySet()) {
-                    System.out.println(entry.getKey() + " : \n" + entry.getValue() + "\n");
-
-                }
-
-
-             */
 
                 while (true) {
                     System.out.println("looking for message with my ip: " + user.getIP());
                     if (messageKeyValues.get("ip").equals(user.getIP())) {
-                        user.getUserStorage().setServerPublicKey(Base64.getDecoder().decode(messageKeyValues.get("publicKey")));
+                        var serverNonce = messageKeyValues.get("nonce");
+                        System.out.println("[client] Server nonce received: " + serverNonce);
+
+                        if (userRepository.getServerNonces(user.getIP()) != null &&
+                                userRepository.getServerNonces(user.getIP()).contains(serverNonce)) {
+                            System.out.println("Nonce already used replay attack alert!!!");
+
+                        }else {
+                            user.getUserStorage().addServerNonceUsed(serverNonce);
+                            user.getUserStorage().setServerPublicKey(Base64.getDecoder().decode(messageKeyValues.get("publicKey")));
+
+                        }
+
+
                         break;
                     }
                 }
 
-
-                //System.out.println("Server public key received: " + Arrays.toString(messageKeyValues.get("publicKey").getBytes()));
 
             } else {
                 System.out.println("Invalid message");
@@ -127,7 +122,7 @@ public class AuthServiceImpl implements AuthService {
 
 
             //System.out.println("Server public key: " + Arrays.toString(user.getUserStorage().getServerPublicKey()));
-
+/*
 
             PublicKey serverPublicKey = Confidentiality.getPublicKeyFromByteArray(user.getUserStorage().getServerPublicKey());
 
@@ -146,6 +141,8 @@ public class AuthServiceImpl implements AuthService {
 
             Thread.sleep(1000);
 
+
+ */
 
 /*
             String msg = Message.formatMessage("REGISTER", new String[]{"username", "password", "salt", "publicKey", "mac"},

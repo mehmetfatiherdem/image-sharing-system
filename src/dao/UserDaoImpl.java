@@ -69,4 +69,9 @@ public class UserDaoImpl implements UserDao{
                 .map(user -> user.getUserStorage().getServerNoncesUsed())
                 .orElse(null);
     }
+
+    @Override
+    public void addUser(UserDTO user) {
+        myDB.addInMemoryUser(user);
+    }
 }

@@ -11,4 +11,5 @@ public interface UserRepository {
     Optional<PrivateKey> getPrivateKey(String username); //FIXME: this should be in userlocal
     void addServerNonce(String ip, String nonce);
     Set<String> getServerNonces(String ip);
+    void addUser(UserDTO user);
 }
