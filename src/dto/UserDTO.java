@@ -19,6 +19,7 @@ public class UserDTO {
     private KeyPair keyPair;
     private Set<String> noncesUsed = new HashSet<>();
     private UserStorage userStorage;
+    private byte[] MAC;
 
 
     public UserDTO(String ip) {
@@ -94,5 +95,11 @@ public class UserDTO {
     }
     public void setUserStorage(UserStorage userStorage) {
         this.userStorage = userStorage;
+    }
+    public byte[] getMAC() {
+        return MAC;
+    }
+    public void setMAC(byte[] MAC) {
+        this.MAC = MAC;
     }
 }

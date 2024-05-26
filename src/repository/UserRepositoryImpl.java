@@ -15,8 +15,18 @@ public class UserRepositoryImpl implements UserRepository{
     }
 
     @Override
-    public Optional<UserDTO> getUser(String username) {
-        return userDao.getUser(username);
+    public Optional<UserDTO> getPersistentUser(String username) {
+        return userDao.getPersistentUser(username);
+    }
+
+    @Override
+    public Optional<UserDTO> getInMemoryUserWithUsername(String username) {
+        return userDao.getInMemoryUserWithUsername(username);
+    }
+
+    @Override
+    public Optional<UserDTO> getInMemoryUserWithIP(String ip) {
+        return userDao.getInMemoryUserWithIP(ip);
     }
 
     @Override
@@ -34,7 +44,12 @@ public class UserRepositoryImpl implements UserRepository{
     }
 
     @Override
-    public void addUser(UserDTO user) {
-        userDao.addUser(user);
+    public void addInMemoryUser(UserDTO user) {
+        userDao.addInMemoryUser(user);
+    }
+
+    @Override
+    public void addPersistentUser(UserDTO user) {
+        userDao.addPersistentUser(user);
     }
 }

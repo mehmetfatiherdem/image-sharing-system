@@ -12,4 +12,8 @@ public class AuthController {
     public void register(String username, String password) {
         authService.register(username, password);
     }
+
+    public void login(String username, String password) {
+        authService.login(username, password);
+    }
 }

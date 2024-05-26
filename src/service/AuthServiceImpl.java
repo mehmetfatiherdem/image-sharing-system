@@ -5,6 +5,8 @@ import dto.UserDTO;
 import helper.format.Message;
 import helper.security.Authentication;
 import helper.security.Confidentiality;
+import helper.security.UserCertificateCredentials;
+import model.Certificate;
 import model.User;
 import repository.UserRepository;
 
@@ -29,35 +31,38 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public void login(String username, String password) {
 
-        try {
-            var user = userRepository.getUser(username);
-            var salt = new byte[256];
 
-            if (user.isPresent()) {
-                salt = user.get().getPasswordSalt();
-            } else {
+        try {
+            var user = userRepository.getPersistentUser(username);
+
+
+            if (user.isEmpty()) {
                 System.out.println("User not found");
                 return;
             }
 
-            // FIXME: encrypt the pword with server's public key hash it on the server side
-
-            byte[] passwordHash = Authentication.hashPassword(password, salt);
-            LoginDTO loginDTO = new LoginDTO(username, passwordHash);
+            //LoginDTO loginDTO = new LoginDTO(username, Base64.getDecoder().decode(password));
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
-            String nonce = Authentication.generateNonce();
+            String nonceClient = Authentication.generateNonce();
+            var salt = user.get().getPasswordSalt();
+            System.out.println("salt: " + Arrays.toString(salt));
 
-            var privateKey = userRepository.getPrivateKey(username);
+            String helloMsg = Message.formatMessage("HELLO", new String[]{"nonce", "ip"},
+                    new String[]{nonceClient, user.get().getIP()});
 
-            var signedMessage = Authentication.sign(nonce.getBytes(), privateKey.orElseThrow());
+            System.out.println("[client] hello message from loginnn!!1!: " + helloMsg);
 
-            String loginMessagePayload = "LOGIN" + " " + loginDTO.getLoginString() + " "
-                    + Arrays.toString(signedMessage);
+            out.writeUTF(helloMsg);
 
-            //String loginMessage = Authentication.appendMACToMessage();
+
+            String loginMessagePayload = Message.formatMessage("LOGIN", new String[]{"username", "password", "salt"},
+                    new String[]{username, password, Confidentiality.encodeByteKeyToStringBase64(salt)});
+
 
             //out.writeUTF(loginMessage);
+
+
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -74,7 +79,7 @@ public class AuthServiceImpl implements AuthService {
 
             User user = new User(username, password);
 
-            userRepository.addUser(new UserDTO(user.getIP(), user.getUserStorage()));
+            userRepository.addInMemoryUser(new UserDTO(user.getIP(), user.getUserStorage()));
 
             String helloMsg = Message.formatMessage("HELLO", new String[]{"nonce", "ip"},
                     new String[]{nonceClient, user.getIP()});
@@ -139,7 +144,7 @@ public class AuthServiceImpl implements AuthService {
 
             out.writeUTF(macKeyString);
 
-            Thread.sleep(1000);
+            //Thread.sleep(1000);
 
             var aesKey = Confidentiality.generateAESKey(256);
             var iv = Confidentiality.generateIV(16);
@@ -149,18 +154,29 @@ public class AuthServiceImpl implements AuthService {
             var encryptedSalt = Confidentiality.encryptWithPublicKey(user.getPasswordSalt(), serverPublicKey);
 
             String message = Message.formatMessage("REGISTER", new String[]{"username", "password", "salt", "publicKey", "mac", "ip", "aesKey", "iv"},
-                    new String[]{username, Confidentiality.encodeByteKeyToStringBase64(encryptedPassword), Confidentiality.encodeByteKeyToStringBase64(encryptedSalt),
-                            Base64.getEncoder().encodeToString(user.getKeyPair().getPublic().getEncoded()),
-                                Confidentiality.encodeByteKeyToStringBase64(MAC), user.getIP(),
-                                    Confidentiality.encodeByteKeyToStringBase64(encryptedAesKey),
-                                        Confidentiality.encodeByteKeyToStringBase64(encryptedIv)});
+                    new String[]{username, Confidentiality.encodeByteKeyToStringBase64(encryptedPassword),
+                            Confidentiality.encodeByteKeyToStringBase64(encryptedSalt),
+                                Base64.getEncoder().encodeToString(user.getKeyPair().getPublic().getEncoded()),
+                                    Confidentiality.encodeByteKeyToStringBase64(MAC), user.getIP(),
+                                        Confidentiality.encodeByteKeyToStringBase64(encryptedAesKey),
+                                            Confidentiality.encodeByteKeyToStringBase64(encryptedIv)});
 
 
 
             // send the encrypted message to the server
            out.writeUTF(message);
 
-           while (true) {
+            var userInMemory = userRepository.getInMemoryUserWithIP(user.getIP());
+
+            if (userInMemory.isEmpty()) {
+                System.out.println("User not found");
+                return;
+            } else {
+                userInMemory.get().setUsername(username);
+                userInMemory.get().setPasswordSalt(user.getPasswordSalt());
+            }
+
+            while (true) {
                String serverResponse2 = in.readUTF();
                var messageKeyValues2 = Message.getKeyValuePairs(serverResponse2);
 
@@ -168,19 +184,35 @@ public class AuthServiceImpl implements AuthService {
                    if (messageKeyValues2.get("message").equals("CERTIFICATE")) {
 
                        if (messageKeyValues2.get("username").equals(user.getUsername()) &&
-                       messageKeyValues2.get("publicKey").equals(user.getKeyPair().getPublic().toString()))
+                               messageKeyValues2.get("publicKey").equals(user.getKeyPair().getPublic().toString())) {
 
-                           System.out.println("[client] server retrieved public key and username correctly");
+                           userInMemory.get().setCertificate(new Certificate(new UserCertificateCredentials(user.getUsername(), user.getKeyPair().getPublic()),
+                                   Base64.getDecoder().decode(messageKeyValues2.get("signature"))));
 
-                       break;
+                           userInMemory.get().setPassword(Base64.getDecoder().decode(messageKeyValues2.get("password")));
+
+                               userRepository.addPersistentUser(userInMemory.get());
+
+                               System.out.println("[client] server retrieved public key and username correctly");
+
+                               if(userRepository.getPersistentUser(user.getUsername()).isPresent()) {
+                                      System.out.println("User registered to persistent users successfully");
+                                   System.out.println("[client] User registered info: " +
+                                           userRepository.getPersistentUser(user.getUsername()).get().getUsername()
+                                           + " " + Arrays.toString(userRepository.getPersistentUser(user.getUsername()).get().getPassword()));
+                                 } else {
+                                      System.out.println("User not registered");
+                               }
+
+                           break;
+                       }
+
+
                    }
-
 
                }
 
            }
-
-
         } catch (Exception e) {
             e.printStackTrace();
         }

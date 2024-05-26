@@ -66,6 +66,7 @@ public class ApplicationManager {
             AuthController authController = new AuthController(authService);
 
             authController.register("admin", "admin");
+            //authController.login("admin", "admin");
 
 
         } catch (InterruptedException | IOException e) {

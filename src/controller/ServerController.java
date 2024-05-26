@@ -2,14 +2,22 @@ package controller;
 
 import service.ServerService;
 
-public class ServerController {
+import java.net.Socket;
+
+public class ServerController implements Runnable{
     private final ServerService serverService;
-    public ServerController(ServerService serverService) {
+    private final Socket socket;
+    public ServerController(Socket socket, ServerService serverService) {
+        this.socket = socket;
         this.serverService = serverService;
     }
 
     public void handleRequests() {
-        serverService.handleRequests();
+        serverService.handleRequests(socket);
     }
 
+    @Override
+    public void run() {
+        handleRequests();
+    }
 }

@@ -16,6 +16,10 @@ import java.net.Socket;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Server implements Runnable{
 
@@ -25,6 +29,8 @@ public class Server implements Runnable{
     private ServerSocket serverSocket;
     private Socket socket;
     private ServerStorage serverStorage;
+    private static Set<ServerController> clientHandlers = ConcurrentHashMap.newKeySet();
+
 
     private Server(int port) throws NoSuchAlgorithmException {
         this.port = port;
@@ -41,21 +47,28 @@ public class Server implements Runnable{
 
     @Override
     public void run() {
+        ExecutorService threadPool = Executors.newFixedThreadPool(10);
+
         try {
             serverSocket = new ServerSocket(port);
-
-            socket = serverSocket.accept();
-
             System.out.println("Server started listening on port " + port);
+
             serverStorage = ServerStorage.getInstance();
             serverStorage.setPrivateKey(Confidentiality.getByteArrayFromPrivateKey(keyPair.getPrivate()));
             serverStorage.setPublicKey(Confidentiality.getByteArrayFromPublicKey(keyPair.getPublic()));
             ServerDao serverDao = new ServerDaoImpl(serverStorage);
             ServerRepository serverRepository = new ServerRepositoryImpl(serverDao);
-            ServerService serverService = new ServerServiceImpl(serverRepository, socket);
-            ServerController serverController = new ServerController(serverService);
+            ServerService serverService = new ServerServiceImpl(serverRepository);
 
-            serverController.handleRequests();
+            while (true) {
+
+                socket = serverSocket.accept();
+                ServerController serverController = new ServerController(socket, serverService);
+                clientHandlers.add(serverController);
+                threadPool.execute(serverController);
+
+            }
+
 
 
         } catch (Exception e) {

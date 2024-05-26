@@ -9,7 +9,8 @@ public class UserEntity {
     private byte[] passwordSalt;
     private Certificate certificate;
 
-    public UserEntity(String username, byte[] password, byte[] passwordSalt, Certificate certificate) throws Exception {
+    public UserEntity(String IP, String username, byte[] password, byte[] passwordSalt, Certificate certificate) throws Exception {
+        this.IP = IP;
         this.username = username;
         this.password = password;
         this.passwordSalt = passwordSalt;

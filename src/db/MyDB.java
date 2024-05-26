@@ -32,10 +32,10 @@ public class MyDB {
         inMemoryUsers.add(userDTO);
     }
 
-    public void addPersistentUser(String username, byte[] password, byte[] passwordSalt, Certificate certificate) {
+    public void addPersistentUser(String IP, String username, byte[] password, byte[] passwordSalt, Certificate certificate) {
         try{
             UserEntity userEntity =
-                    new UserEntity(username, password, passwordSalt, certificate);
+                    new UserEntity(IP, username, password, passwordSalt, certificate);
             persistentUsers.add(userEntity);
         } catch (Exception e) {
             e.printStackTrace();

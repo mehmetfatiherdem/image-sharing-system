@@ -17,7 +17,7 @@ public class UserDaoImpl implements UserDao{
 
 
     @Override
-    public Optional<UserDTO> getUser(String username) {
+    public Optional<UserDTO> getPersistentUser(String username) {
         var users = myDB.getPersistentUsers();
 
         var user = users.stream()
@@ -33,6 +33,40 @@ public class UserDaoImpl implements UserDao{
 
         return Optional.of(new UserDTO(user.getUsername(), user.getPassword(), user.getIP()));
 
+    }
+
+    @Override
+    public Optional<UserDTO> getInMemoryUserWithUsername(String username) {
+        var users = myDB.getInMemoryUsers();
+
+        var user = users.stream()
+                .filter(u -> u.getUsername().equals(username))
+                .findFirst()
+                .orElse(null);
+
+        if (user == null) {
+            System.out.println("User not found");
+            return Optional.empty();
+        }
+
+        return Optional.of(user);
+    }
+
+    @Override
+    public Optional<UserDTO> getInMemoryUserWithIP(String ip) {
+        var users = myDB.getInMemoryUsers();
+
+        var user = users.stream()
+                .filter(u -> u.getIP().equals(ip))
+                .findFirst()
+                .orElse(null);
+
+        if (user == null) {
+            System.out.println("User not found");
+            return Optional.empty();
+        }
+
+        return Optional.of(user);
     }
 
     @Override
@@ -71,7 +105,12 @@ public class UserDaoImpl implements UserDao{
     }
 
     @Override
-    public void addUser(UserDTO user) {
+    public void addInMemoryUser(UserDTO user) {
         myDB.addInMemoryUser(user);
+    }
+
+    @Override
+    public void addPersistentUser(UserDTO user) {
+        myDB.addPersistentUser(user.getIP(), user.getUsername(), user.getPassword(), user.getPasswordSalt(), user.getCertificate());
     }
 }
