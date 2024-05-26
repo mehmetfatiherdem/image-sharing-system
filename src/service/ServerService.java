@@ -8,7 +8,7 @@ import java.security.PrivateKey;
 import java.util.ArrayList;
 
 public interface ServerService {
-    void createCertificate(UserCertificateCredentials userCertificateCredentials, PrivateKey privateKey, String ip);
+    void createCertificate(UserCertificateCredentials userCertificateCredentials, byte[] sign, String ip);
     void sendImagePostNotification(ArrayList<UserDTO> onlineUsers, String imageName, String ownerUsername);
     void sendImage(ImageDownloadData imageDownloadData);
     void handleRequests();

@@ -150,7 +150,7 @@ public class AuthServiceImpl implements AuthService {
 
             String message = Message.formatMessage("REGISTER", new String[]{"username", "password", "salt", "publicKey", "mac", "ip", "aesKey", "iv"},
                     new String[]{username, Confidentiality.encodeByteKeyToStringBase64(encryptedPassword), Confidentiality.encodeByteKeyToStringBase64(encryptedSalt),
-                            user.getKeyPair().getPublic().toString(),
+                            Base64.getEncoder().encodeToString(user.getKeyPair().getPublic().getEncoded()),
                                 Confidentiality.encodeByteKeyToStringBase64(MAC), user.getIP(),
                                     Confidentiality.encodeByteKeyToStringBase64(encryptedAesKey),
                                         Confidentiality.encodeByteKeyToStringBase64(encryptedIv)});
@@ -159,6 +159,26 @@ public class AuthServiceImpl implements AuthService {
 
             // send the encrypted message to the server
            out.writeUTF(message);
+
+           while (true) {
+               String serverResponse2 = in.readUTF();
+               var messageKeyValues2 = Message.getKeyValuePairs(serverResponse2);
+
+               if (messageKeyValues2.get("ip").equals(user.getIP())) {
+                   if (messageKeyValues2.get("message").equals("CERTIFICATE")) {
+
+                       if (messageKeyValues2.get("username").equals(user.getUsername()) &&
+                       messageKeyValues2.get("publicKey").equals(user.getKeyPair().getPublic().toString()))
+
+                           System.out.println("[client] server retrieved public key and username correctly");
+
+                       break;
+                   }
+
+
+               }
+
+           }
 
 
         } catch (Exception e) {

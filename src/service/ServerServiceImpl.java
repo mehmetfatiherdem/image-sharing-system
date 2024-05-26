@@ -30,10 +30,10 @@ public class ServerServiceImpl implements ServerService {
         this.socket = socket;
     }
     @Override
-    public void createCertificate(UserCertificateCredentials userCertificateCredentials, PrivateKey privateKey, String ip) {
+    public void createCertificate(UserCertificateCredentials userCertificateCredentials, byte[] sign, String ip) {
         try{
-            byte[] certificate = Authentication.sign(userCertificateCredentials.getCredentialBytes(), privateKey);
-            serverRepository.addCertificate(new Certificate(userCertificateCredentials, certificate), ip);
+            //byte[] certificate = Authentication.sign(userCertificateCredentials.getCredentialBytes(), privateKey);
+            serverRepository.addCertificate(new Certificate(userCertificateCredentials, sign), ip);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -174,9 +174,38 @@ public class ServerServiceImpl implements ServerService {
                         var retrievedPassword = Confidentiality.decryptWithAES(Confidentiality.decodeStringKeyToByteBase64(messageKeyValues.get("password")),
                                aesKey, retrievedIV);
 
-                        System.out.println("[server] Password received: " + new String(retrievedPassword));
+                        System.out.println("[server] Password received: " + Arrays.toString(retrievedPassword));
 
-                        //TODO: create certificate etc. and send store etc.
+                        var hashedPassword = Authentication.hashPassword(Arrays.toString(retrievedPassword), retrievedSalt);
+
+                        var user = serverRepository.getUser(messageKeyValues.get("ip"));
+
+                        user.setPassword(hashedPassword);
+                        user.setPasswordSalt(retrievedSalt);
+                        user.setUsername(messageKeyValues.get("username"));
+                        user.setOnline(false);
+
+
+
+                        // sign client public key with client username and create a certificate
+                        UserCertificateCredentials userCertificateCredentials =
+                                new UserCertificateCredentials(messageKeyValues.get("username"), Confidentiality.getPublicKeyFromString(messageKeyValues.get("publicKey")));
+                        byte[] sign = Authentication.sign(userCertificateCredentials.getCredentialBytes(), serverRepository.getPrivateKey());
+                        Certificate certificate = new Certificate(userCertificateCredentials, sign);
+                        createCertificate(userCertificateCredentials, sign, messageKeyValues.get("ip"));
+
+                        user.setCertificate(certificate);
+
+                        String certificateMsg = Message.formatMessage("CERTIFICATE", new String[]{"ip", "certificateSign", "username", "publicKey"},
+                                new String[]{messageKeyValues.get("ip"), Confidentiality.encodeByteKeyToStringBase64(sign), userCertificateCredentials.getUsername(),
+                                        userCertificateCredentials.getPublicKey().toString()});
+
+                        out.writeUTF(certificateMsg);
+
+                        var _u = serverRepository.getUser(messageKeyValues.get("ip"));
+
+                        System.out.println("[server] user registered info: " + _u.getUsername() + " " + Arrays.toString(_u.getPassword()) +
+                                " certificate uname: " + _u.getCertificate().getCertificateCredentials().getUsername());
 
                     } else {
                         System.out.println("MAC not verified");
