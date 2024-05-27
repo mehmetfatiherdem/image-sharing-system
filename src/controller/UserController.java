@@ -2,6 +2,7 @@ package controller;
 
 import model.Certificate;
 import service.UserService;
+import java.util.List;
 
 import java.security.PublicKey;
 
@@ -24,8 +25,8 @@ public class UserController {
         return userService.verifyCertificate(certificate, publicKey);
     }
 
-    public void postImage(String imageName, String imagePath) {
-        userService.postImage(imageName, imagePath);
+    public void postImage(String imageName, String imagePath, List<String> accessList) {
+        userService.postImage(imageName, imagePath, accessList);
     }
 
     public void downloadImage(String imageName) {

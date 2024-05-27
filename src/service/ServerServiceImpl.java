@@ -19,6 +19,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.HashMap;
 
 public class ServerServiceImpl implements ServerService, Runnable {
     private final ServerRepository serverRepository;
@@ -89,6 +90,10 @@ public class ServerServiceImpl implements ServerService, Runnable {
                                     serverRepository.addNonceUsed(messageKeyValues.get("ip"), messageKeyValues.get("nonce"));
 
                                 } else {
+                                    for (var msg: messageKeyValues.entrySet()) {
+                                        System.out.println("[server] key: " + msg.getKey() + " value: " + msg.getValue());
+                                    }
+
                                     serverRepository.addUser(new UserDTO(messageKeyValues.get("ip")));
                                     serverRepository.addNonceUsed(messageKeyValues.get("ip"), messageKeyValues.get("nonce"));
                                 }
@@ -96,9 +101,13 @@ public class ServerServiceImpl implements ServerService, Runnable {
                                 System.out.println("[server] Nonce added to list: " + messageKeyValues.get("nonce"));
                                 System.out.println("[server] ip: " + messageKeyValues.get("ip"));
 
+                                ;
 
-                                String publicKeyMessage = Message.formatMessage("PUBLICKEY", new String[]{"publicKey", "ip", "nonce"},
-                                        new String[]{Confidentiality.encodeByteKeyToStringBase64(serverRepository.getPublicKey().getEncoded()), messageKeyValues.get("ip"), nonceServer});
+                                String publicKeyMessage = Message.formatMessage("PUBLICKEY",new HashMap<>(){{
+                                    put("publicKey", Confidentiality.encodeByteKeyToStringBase64(serverRepository.getPublicKey().getEncoded()));
+                                    put("ip", messageKeyValues.get("ip"));
+                                    put("nonce", nonceServer);
+                                }});
 
                                 out.writeUTF(publicKeyMessage);
 
@@ -164,11 +173,18 @@ public class ServerServiceImpl implements ServerService, Runnable {
 
                         user.setCertificate(certificate);
 
-                        String certificateMsg = Message.formatMessage("CERTIFICATE", new String[]{"ip", "certificateSign", "username", "publicKey", "signature", "password"},
-                                new String[]{messageKeyValues.get("ip"), Confidentiality.encodeByteKeyToStringBase64(sign), userCertificateCredentials.getUsername(),
-                                        userCertificateCredentials.getPublicKey().toString(),
-                                        Confidentiality.encodeByteKeyToStringBase64(certificate.getSignature()),
-                                        Base64.getEncoder().encodeToString(hashedPassword)});
+                        String certificateMsg = Message.formatMessage("CERTIFICATE", new HashMap<>(){
+                            {
+                                put("ip", messageKeyValues.get("ip"));
+                                put("certificateSign", Confidentiality.encodeByteKeyToStringBase64(sign));
+                                put("username", userCertificateCredentials.getUsername());
+                                put("publicKey", userCertificateCredentials.getPublicKey().toString());
+                                put("signature", Confidentiality.encodeByteKeyToStringBase64(certificate.getSignature()));
+                                put("password", Base64.getEncoder().encodeToString(hashedPassword));
+                            }
+
+                        });
+
 
                         out.writeUTF(certificateMsg);
 
@@ -219,16 +235,23 @@ public class ServerServiceImpl implements ServerService, Runnable {
 
                             user.setSession(session);
 
-                            String loginMsg = Message.formatMessage("AUTHENTICATED", new String[]{"ip", "sessionID"},
-                                    new String[]{messageKeyValues.get("ip"), session.getSessionID()});
+                            //TODO: encrypt session id with user public key
+                            String loginMsg = Message.formatMessage("AUTHENTICATED", new HashMap<>(){{
+                                put("ip", messageKeyValues.get("ip"));
+                                put("sessionID", session.getSessionID());
+                            }});
+
 
                             out.writeUTF(loginMsg);
 
                         } else {
                             System.out.println("[server] Passwords do not match");
 
-                            String loginMsg = Message.formatMessage("LOGIN", new String[]{"ip", "message"},
-                                    new String[]{messageKeyValues.get("ip"), "LOGIN FAILED"});
+                            String loginMsg = Message.formatMessage("LOGIN", new HashMap<>(){{
+                                put("ip", messageKeyValues.get("ip"));
+                                put("loginStatus", "FAILED");
+                            }});
+
 
                             out.writeUTF(loginMsg);
                         }
@@ -237,8 +260,9 @@ public class ServerServiceImpl implements ServerService, Runnable {
                         System.out.println("MAC not verified");
                     }
 
-                } else if (messageKeyValues.get("message").equals("SESSIONID")) {
-                    if (Arrays.equals(serverRepository.getUserWithIP(messageKeyValues.get("ip")).getMAC(), Confidentiality.decodeStringKeyToByteBase64(messageKeyValues.get("mac")))) {
+                } else if (messageKeyValues.get("message").equals("ACCESSIBILITY")) {
+                    if (Arrays.equals(serverRepository.getUserWithIP(messageKeyValues.get("ip")).getMAC(),
+                            Confidentiality.decodeStringKeyToByteBase64(messageKeyValues.get("mac")))) {
                         System.out.println("[server] POST IMAGE MAC verified");
 
                         var sessionID = Confidentiality.decryptWithPrivateKey(Confidentiality.decodeStringKeyToByteBase64(messageKeyValues.get("sessionID")),
@@ -250,23 +274,49 @@ public class ServerServiceImpl implements ServerService, Runnable {
 
                         if(user.getSession() == null) {
                             System.out.println("[server] userIP: " + messageKeyValues.get("ip") + " not authenticated");
-                            out.writeUTF(Message.formatMessage("SESSION_NOT_FOUND",  new String[]{"ip"},
-                                    new String[]{messageKeyValues.get("ip")}));
+                            out.writeUTF(Message.formatMessage("SESSION_NOT_FOUND", new HashMap<>(){{
+                                put("ip", messageKeyValues.get("ip"));
+                            }}));
                             continue;
                         }
 
                         if(session.isTimedOut()) {
                             System.out.println("[server] session for userIP: " + messageKeyValues.get("ip") + " is timed out");
                             user.setSession(null);
-                            out.writeUTF(Message.formatMessage("SESSION_TIME_OUT",  new String[]{"ip"},
-                                    new String[]{messageKeyValues.get("ip")}));
+                            out.writeUTF(Message.formatMessage("SESSION_TIME_OUT",  new HashMap<>(){{
+                                put("ip", messageKeyValues.get("ip"));
+                            }}));
                             continue;
                         }
 
                         session.updateLastAccess();
 
-                        out.writeUTF(Message.formatMessage("SESSION_VALID",  new String[]{"ip"},
-                                new String[]{messageKeyValues.get("ip")}));
+                        if (messageKeyValues.get("accessList").equals("[ALL]")) {
+                            out.writeUTF(Message.formatMessage("SESSION_VALID",  new HashMap<>(){{
+                                put("ip", messageKeyValues.get("ip"));
+                                put("all", "n/a");
+
+                            }}));
+                        } else {
+                            var list = Message.parseArrayString(messageKeyValues.get("accessList"));
+                            var pubKeysResponse = new HashMap<String, String>();
+                            for (var acc : list) {
+                                var userDTO = serverRepository.getUserWithUsername(acc);
+                                if (userDTO != null) {
+                                    pubKeysResponse.put(acc,
+                                            Confidentiality.encodeByteKeyToStringBase64(Authentication.sign(userDTO.getCertificate().getCertificateCredentials().getPublicKey().getEncoded(), serverRepository.getPrivateKey())));
+                                } else {
+                                    System.out.println("[server] user: " + acc + "in the access list not found");
+
+                                }
+                            }
+
+                            pubKeysResponse.put("ip", messageKeyValues.get("ip") );
+
+                            out.writeUTF(Message.formatMessage("SESSION_VALID", pubKeysResponse));
+
+                        }
+
 
 
                     } else {

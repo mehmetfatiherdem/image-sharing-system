@@ -12,6 +12,8 @@ import socket.TCPClient;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ApplicationManager {
     private static ApplicationManager instance;
@@ -72,7 +74,7 @@ public class ApplicationManager {
             String imageName = "glew_logo.png";
             String imagePath = "assets";
 
-           userController.postImage(imageName, imagePath);
+           userController.postImage(imageName, imagePath, new ArrayList<>(List.of("ALL")));
 
 
         } catch (InterruptedException | IOException e) {

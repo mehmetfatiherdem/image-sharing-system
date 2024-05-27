@@ -1,6 +1,8 @@
 package helper.format;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Message {
@@ -39,17 +41,14 @@ public class Message {
         return formattedMessage.toString();
     }
 
-    public static String formatMessage(String message, String[] dataKeys, String[] dataValues) {
+    public static String formatMessage(String message, HashMap<String, String> keValuePairs) {
         StringBuilder formattedMessage = new StringBuilder();
         formattedMessage.append("{\n");
         formattedMessage.append("\t\"message\": \"" + message + "\",\n");
-        //formattedMessage.append("\t\"data\": {\n");
-        for (int i = 0; i < dataKeys.length; i++) {
-            formattedMessage.append("\t\t\"" + dataKeys[i] + "\": \"" + dataValues[i] + "\"").append(",\n");
-
+        for (Map.Entry<String, String> entry : keValuePairs.entrySet()) {
+            formattedMessage.append("\t\t\"" + entry.getKey() + "\": \"" + entry.getValue() + "\"").append(",\n");
         }
         formattedMessage.append("\t}\n");
-        formattedMessage.append("}\n");
         return formattedMessage.toString();
     }
 
@@ -117,5 +116,30 @@ public class Message {
 
     }
 
+    public static String formatListToArrayString(List<String> list) {
+        StringBuilder arrayString = new StringBuilder("[");
 
+        for (int i = 0; i < list.size(); i++) {
+            arrayString.append("\"").append(list.get(i)).append("\"");
+            if (i < list.size() - 1) {
+                arrayString.append(", ");
+            }
+        }
+
+        arrayString.append("]");
+        return arrayString.toString();
+    }
+
+    public static List<String> parseArrayString(String arrayString) {
+        // Remove the brackets and split by comma
+        String[] elements = arrayString.replace("[", "").replace("]", "").split(",");
+        List<String> result = new ArrayList<>();
+
+        // Add trimmed elements to the result list
+        for (String element : elements) {
+            result.add(element.trim().replaceAll("^\"|\"$", "")); // Remove surrounding quotes and trim
+        }
+
+        return result;
+    }
 }
