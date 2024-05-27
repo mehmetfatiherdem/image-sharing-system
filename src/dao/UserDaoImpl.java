@@ -31,7 +31,7 @@ public class UserDaoImpl implements UserDao{
         }
 
 
-        return Optional.of(new UserDTO(user.getUsername(), user.getPassword(), user.getIP()));
+        return Optional.of(new UserDTO(user.getUsername(), user.getPassword(), user.getPasswordSalt(), user.getIP()));
 
     }
 
@@ -112,5 +112,18 @@ public class UserDaoImpl implements UserDao{
     @Override
     public void addPersistentUser(UserDTO user) {
         myDB.addPersistentUser(user.getIP(), user.getUsername(), user.getPassword(), user.getPasswordSalt(), user.getCertificate());
+    }
+
+    @Override
+    public void addUserStorage(UserStorage userStorage) {
+        myDB.addUserStorage(userStorage);
+    }
+
+    @Override
+    public UserStorage getUserStorageWithIP(String ip) {
+        return myDB.getUserStorages().stream()
+                .filter(storage -> storage.getIp().equals(ip))
+                .findFirst()
+                .orElse(null);
     }
 }

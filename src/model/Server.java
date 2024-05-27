@@ -1,13 +1,11 @@
 package model;
 
-import controller.ServerController;
 import dao.ServerDao;
 import dao.ServerDaoImpl;
 import helper.security.Confidentiality;
 import repository.ServerRepository;
 import repository.ServerRepositoryImpl;
 import serverlocal.ServerStorage;
-import service.ServerService;
 import service.ServerServiceImpl;
 
 import java.net.BindException;
@@ -29,7 +27,7 @@ public class Server implements Runnable{
     private ServerSocket serverSocket;
     private Socket socket;
     private ServerStorage serverStorage;
-    private static Set<ServerController> clientHandlers = ConcurrentHashMap.newKeySet();
+    private static Set<ServerServiceImpl> clientHandlers = ConcurrentHashMap.newKeySet();
 
 
     private Server(int port) throws NoSuchAlgorithmException {
@@ -58,14 +56,14 @@ public class Server implements Runnable{
             serverStorage.setPublicKey(Confidentiality.getByteArrayFromPublicKey(keyPair.getPublic()));
             ServerDao serverDao = new ServerDaoImpl(serverStorage);
             ServerRepository serverRepository = new ServerRepositoryImpl(serverDao);
-            ServerService serverService = new ServerServiceImpl(serverRepository);
+
 
             while (true) {
 
                 socket = serverSocket.accept();
-                ServerController serverController = new ServerController(socket, serverService);
-                clientHandlers.add(serverController);
-                threadPool.execute(serverController);
+                ServerServiceImpl serverService = new ServerServiceImpl(serverRepository, socket);
+                clientHandlers.add(serverService);
+                threadPool.execute(serverService);
 
             }
 

@@ -49,7 +49,14 @@ public class ServerRepositoryImpl implements ServerRepository{
     }
 
     @Override
-    public UserDTO getUser(String ip) {
-        return serverDao.getUser(ip);
+    public UserDTO getUserWithIP(String ip) {
+        return serverDao.getUserWithIP(ip);
     }
+
+    @Override
+    public UserDTO getUserWithUsername(String username) {
+        return serverDao.getUserWithUsername(username);
+    }
+
+
 }

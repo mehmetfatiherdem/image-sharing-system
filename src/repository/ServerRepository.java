@@ -16,5 +16,6 @@ public interface ServerRepository {
     void addNonceUsed(String ip, String nonce);
     List<UserDTO> getUsers();
     void addUser(UserDTO user);
-    UserDTO getUser(String ip);
+    UserDTO getUserWithIP(String ip);
+    UserDTO getUserWithUsername(String username);
 }

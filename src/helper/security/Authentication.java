@@ -6,6 +6,7 @@ import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
+import java.math.BigInteger;
 import java.security.*;
 import java.security.spec.KeySpec;
 import java.util.Arrays;
@@ -117,5 +118,10 @@ public class Authentication {
             }
         }
         throw new RuntimeException("No more unique IPs available in the specified range.");
+    }
+
+    public static String generateSessionID() {
+        SecureRandom random = new SecureRandom();
+        return new BigInteger(130, random).toString(32);
     }
 }

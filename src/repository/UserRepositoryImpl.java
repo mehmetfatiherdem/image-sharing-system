@@ -2,6 +2,7 @@ package repository;
 
 import dao.UserDao;
 import dto.UserDTO;
+import userlocal.UserStorage;
 
 import java.security.PrivateKey;
 import java.util.Optional;
@@ -51,5 +52,15 @@ public class UserRepositoryImpl implements UserRepository{
     @Override
     public void addPersistentUser(UserDTO user) {
         userDao.addPersistentUser(user);
+    }
+
+    @Override
+    public void addUserStorage(UserStorage userStorage) {
+        userDao.addUserStorage(userStorage);
+    }
+
+    @Override
+    public UserStorage getUserStorageWithIP(String ip) {
+        return userDao.getUserStorageWithIP(ip);
     }
 }

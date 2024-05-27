@@ -1,6 +1,5 @@
 package service;
 
-import dto.LoginDTO;
 import dto.UserDTO;
 import helper.format.Message;
 import helper.security.Authentication;
@@ -9,6 +8,7 @@ import helper.security.UserCertificateCredentials;
 import model.Certificate;
 import model.User;
 import repository.UserRepository;
+import userlocal.UserStorage;
 
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
@@ -33,34 +33,132 @@ public class AuthServiceImpl implements AuthService {
 
 
         try {
-            var user = userRepository.getPersistentUser(username);
+            var userPersistent = userRepository.getPersistentUser(username);
 
-
-            if (user.isEmpty()) {
+            if (userPersistent.isEmpty()) {
                 System.out.println("User not found");
                 return;
             }
 
             //LoginDTO loginDTO = new LoginDTO(username, Base64.getDecoder().decode(password));
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+            DataInputStream in = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
 
             String nonceClient = Authentication.generateNonce();
-            var salt = user.get().getPasswordSalt();
+            var salt = userPersistent.get().getPasswordSalt();
             System.out.println("salt: " + Arrays.toString(salt));
 
+            var userInMemory = userRepository.getInMemoryUserWithIP(userPersistent.get().getIP());
+
+            System.out.println("[client] login: userinmemory: " + userInMemory.isPresent());
+
+            User user;
+
+            if(userInMemory.isEmpty()) {
+                user = new User(userPersistent.get().getUsername(), Confidentiality.encodeByteKeyToStringBase64(userPersistent.get().getPassword()));
+                user.setIP(userPersistent.get().getIP());
+                userRepository.addInMemoryUser(new UserDTO(userPersistent.get().getUsername(), userPersistent.get().getPassword(), userPersistent.get().getIP()));
+            } else {
+                user = new User(userInMemory.get().getUsername(), Confidentiality.encodeByteKeyToStringBase64(userInMemory.get().getPassword()));
+                user.setIP(userPersistent.get().getIP());
+            }
+
             String helloMsg = Message.formatMessage("HELLO", new String[]{"nonce", "ip"},
-                    new String[]{nonceClient, user.get().getIP()});
+                    new String[]{nonceClient, user.getIP()});
 
             System.out.println("[client] hello message from loginnn!!1!: " + helloMsg);
 
             out.writeUTF(helloMsg);
 
+            String serverResponse = in.readUTF();
 
-            String loginMessagePayload = Message.formatMessage("LOGIN", new String[]{"username", "password", "salt"},
-                    new String[]{username, password, Confidentiality.encodeByteKeyToStringBase64(salt)});
+            var messageKeyValues = Message.getKeyValuePairs(serverResponse);
 
 
-            //out.writeUTF(loginMessage);
+            if (messageKeyValues.get("message").equals("PUBLICKEY")) {
+
+                while (true) {
+                    System.out.println("looking for message with my ip: " + user.getIP());
+                    if (messageKeyValues.get("ip").equals(user.getIP())) {
+                        var serverNonce = messageKeyValues.get("nonce");
+                        System.out.println("[client] Server nonce received: " + serverNonce);
+
+                        if (userRepository.getServerNonces(user.getIP()) != null &&
+                                userRepository.getServerNonces(user.getIP()).contains(serverNonce)) {
+                            System.out.println("Nonce already used replay attack alert!!!");
+
+                        }else {
+                            var userStorage = userRepository.getUserStorageWithIP(messageKeyValues.get("ip"));
+                            userStorage.addServerNonceUsed(serverNonce);
+                            if(userStorage.getServerPublicKey() == null) {
+                                userStorage.setServerPublicKey(Base64.getDecoder().decode(messageKeyValues.get("publicKey")));
+                            }
+                        }
+
+
+                        break;
+                    }
+                }
+
+
+            } else {
+                System.out.println("Invalid message");
+                System.exit(1);
+            }
+
+
+            //System.out.println("Server public key: " + Arrays.toString(user.getUserStorage().getServerPublicKey()));
+
+
+            PublicKey serverPublicKey = Confidentiality.getPublicKeyFromByteArray(userRepository.getUserStorageWithIP(messageKeyValues.get("ip")).getServerPublicKey());
+
+            // send MAC key to server
+            byte[] macKey = Authentication.generateMACKey();
+            //byte[] pms = Confidentiality.generateAESKey(256).getEncoded();
+            byte[] MAC = Authentication.generateMAC("Secretmsg123!".getBytes(), macKey);
+
+
+            byte[] encryptedMacKey = Confidentiality.encryptWithPublicKey(macKey, serverPublicKey);
+            String macKeyString = Message.formatMessage("MAC", new String[]{"secretMessage", "macKey", "ip"},
+                    new String[]{"Secretmsg123!", Confidentiality.encodeByteKeyToStringBase64(encryptedMacKey), user.getIP()});
+            System.out.println("MAC generated by client: " + Arrays.toString(MAC));
+
+            out.writeUTF(macKeyString);
+
+            //Thread.sleep(1000);
+
+            var aesKey = Confidentiality.generateAESKey(256);
+            var iv = Confidentiality.generateIV(16);
+            var encryptedPassword = Confidentiality.encryptWithAES(password.getBytes(), aesKey, iv);
+            var encryptedIv = Confidentiality.encryptWithPublicKey(iv, serverPublicKey);
+            var encryptedAesKey = Confidentiality.encryptWithPublicKey(aesKey.getEncoded(), serverPublicKey);
+
+
+            String loginMessagePayload = Message.formatMessage("LOGIN", new String[]{"ip", "username", "password", "iv", "aesKey", "mac"},
+                    new String[]{user.getIP(), username, Confidentiality.encodeByteKeyToStringBase64(encryptedPassword), Confidentiality.encodeByteKeyToStringBase64(encryptedIv),
+                    Confidentiality.encodeByteKeyToStringBase64(encryptedAesKey), Confidentiality.encodeByteKeyToStringBase64(MAC)});
+
+
+            out.writeUTF(loginMessagePayload);
+
+            while (true) {
+                String serverResponse2 = in.readUTF();
+                var messageKeyValues2 = Message.getKeyValuePairs(serverResponse2);
+
+                if (messageKeyValues2.get("ip").equals(user.getIP())) {
+                    if(messageKeyValues2.get("message").equals("AUTHENTICATED")) {
+
+                        System.out.println("[client] server response after login: " + messageKeyValues2.get("sessionID"));
+
+                    } else {
+                        System.out.println("authentication failed");
+                        return;
+                    }
+
+                }
+
+
+            }
 
 
 
@@ -78,8 +176,15 @@ public class AuthServiceImpl implements AuthService {
             String nonceClient = Authentication.generateNonce();
 
             User user = new User(username, password);
+            user.assignIP();
+            user.assignKeyPair();
+            user.assignSalt();
 
-            userRepository.addInMemoryUser(new UserDTO(user.getIP(), user.getUserStorage()));
+            UserStorage userStorage = new UserStorage(user.getIP(), user.getUsername(), user.getKeyPair().getPrivate().getEncoded());
+
+            userRepository.addUserStorage(userStorage);
+
+            userRepository.addInMemoryUser(new UserDTO(user.getIP(), userStorage));
 
             String helloMsg = Message.formatMessage("HELLO", new String[]{"nonce", "ip"},
                     new String[]{nonceClient, user.getIP()});
@@ -109,8 +214,10 @@ public class AuthServiceImpl implements AuthService {
                             System.out.println("Nonce already used replay attack alert!!!");
 
                         }else {
-                            user.getUserStorage().addServerNonceUsed(serverNonce);
-                            user.getUserStorage().setServerPublicKey(Base64.getDecoder().decode(messageKeyValues.get("publicKey")));
+                            userRepository.getUserStorageWithIP(messageKeyValues.get("ip")).addServerNonceUsed(serverNonce);
+                            //user.getUserStorage().addServerNonceUsed(serverNonce);
+                            userRepository.getUserStorageWithIP(messageKeyValues.get("ip")).setServerPublicKey(Base64.getDecoder().decode(messageKeyValues.get("publicKey")));
+                            //user.getUserStorage().setServerPublicKey(Base64.getDecoder().decode(messageKeyValues.get("publicKey")));
 
                         }
 
@@ -129,7 +236,7 @@ public class AuthServiceImpl implements AuthService {
             //System.out.println("Server public key: " + Arrays.toString(user.getUserStorage().getServerPublicKey()));
 
 
-            PublicKey serverPublicKey = Confidentiality.getPublicKeyFromByteArray(user.getUserStorage().getServerPublicKey());
+            PublicKey serverPublicKey = Confidentiality.getPublicKeyFromByteArray(userRepository.getUserStorageWithIP(messageKeyValues.get("ip")).getServerPublicKey());
 
             // send MAC key to server
             byte[] macKey = Authentication.generateMACKey();
@@ -174,6 +281,8 @@ public class AuthServiceImpl implements AuthService {
             } else {
                 userInMemory.get().setUsername(username);
                 userInMemory.get().setPasswordSalt(user.getPasswordSalt());
+
+                System.out.println("[client] user salt saved: " + Arrays.toString(userInMemory.get().getPasswordSalt()));
             }
 
             while (true) {
@@ -199,7 +308,8 @@ public class AuthServiceImpl implements AuthService {
                                       System.out.println("User registered to persistent users successfully");
                                    System.out.println("[client] User registered info: " +
                                            userRepository.getPersistentUser(user.getUsername()).get().getUsername()
-                                           + " " + Arrays.toString(userRepository.getPersistentUser(user.getUsername()).get().getPassword()));
+                                           + " " + Arrays.toString(userRepository.getPersistentUser(user.getUsername()).get().getPassword()) +
+                                           " salt::: " + Arrays.toString(userRepository.getPersistentUser(user.getUsername()).get().getPasswordSalt()));
                                  } else {
                                       System.out.println("User not registered");
                                }

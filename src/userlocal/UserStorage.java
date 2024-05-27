@@ -6,19 +6,17 @@ import java.util.Set;
 // trying to imitate users own machines to store private key and stuff
 public class UserStorage {
 
+    private String ip;
+    private String userName;
     private Set<String> serverNoncesUsed = new HashSet<>();
     private static UserStorage instance;
     private byte[] serverPublicKey;
     private byte[] privateKey;
 
-    public UserStorage() {
-    }
-
-    public static UserStorage getInstance() {
-        if (instance == null) {
-            instance = new UserStorage();
-        }
-        return instance;
+    public UserStorage(String ip, String userName, byte[] privateKey) {
+        this.ip = ip;
+        this.userName = userName;
+        this.privateKey = privateKey;
     }
 
     // Getters and setters
@@ -41,4 +39,11 @@ public class UserStorage {
         serverNoncesUsed.add(nonce);
     }
 
+    public String getIp() {
+        return ip;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
 }

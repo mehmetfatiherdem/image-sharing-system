@@ -82,7 +82,7 @@ public class ServerDaoImpl implements ServerDao{
     }
 
     @Override
-    public UserDTO getUser(String ip) {
+    public UserDTO getUserWithIP(String ip) {
         var users = serverStorage.getUsers();
         for (var user : users) {
             if (user.getIP().equals(ip)) {
@@ -90,6 +90,17 @@ public class ServerDaoImpl implements ServerDao{
             }
         }
 
+        return null;
+    }
+
+    @Override
+    public UserDTO getUserWithUsername(String username) {
+        var users = serverStorage.getUsers();
+        for (var user: users) {
+            if (user.getUsername().equals(username)) {
+                return user;
+            }
+        }
         return null;
     }
 }

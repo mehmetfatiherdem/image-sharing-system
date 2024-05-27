@@ -1,6 +1,7 @@
 package dto;
 
 import model.Certificate;
+import model.Session;
 import userlocal.UserStorage;
 
 import java.security.KeyPair;
@@ -20,6 +21,7 @@ public class UserDTO {
     private Set<String> noncesUsed = new HashSet<>();
     private UserStorage userStorage;
     private byte[] MAC;
+    private Session session;
 
 
     public UserDTO(String ip) {
@@ -42,6 +44,27 @@ public class UserDTO {
         this.username = username;
         this.password = password;
         this.passwordSalt = passwordSalt;
+    }
+
+    public UserDTO(String username, byte[] password, byte[] passwordSalt, String IP) {
+        this.username = username;
+        this.password = password;
+        this.passwordSalt = passwordSalt;
+        this.IP = IP;
+    }
+
+    public UserDTO(String IP, String username, byte[] password, byte[] passwordSalt, boolean isOnline, Certificate certificate, KeyPair keyPair, Set<String> noncesUsed, UserStorage userStorage, byte[] MAC, Session session) {
+        this.IP = IP;
+        this.username = username;
+        this.password = password;
+        this.passwordSalt = passwordSalt;
+        this.isOnline = isOnline;
+        this.certificate = certificate;
+        this.keyPair = keyPair;
+        this.noncesUsed = noncesUsed;
+        this.userStorage = userStorage;
+        this.MAC = MAC;
+        this.session = session;
     }
 
     // Getters and setters
@@ -101,5 +124,13 @@ public class UserDTO {
     }
     public void setMAC(byte[] MAC) {
         this.MAC = MAC;
+    }
+
+    public Session getSession() {
+        return session;
+    }
+
+    public void setSession(Session session) {
+        this.session = session;
     }
 }

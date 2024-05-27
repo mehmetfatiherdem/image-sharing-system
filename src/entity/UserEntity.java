@@ -1,6 +1,7 @@
 package entity;
 
 import model.Certificate;
+import userlocal.UserStorage;
 
 public class UserEntity {
     private String IP;

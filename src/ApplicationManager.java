@@ -9,9 +9,13 @@ import repository.UserRepository;
 import repository.UserRepositoryImpl;
 import service.*;
 import socket.TCPClient;
+import userlocal.UserStorage;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class ApplicationManager {
     private static ApplicationManager instance;
@@ -66,7 +70,7 @@ public class ApplicationManager {
             AuthController authController = new AuthController(authService);
 
             authController.register("admin", "admin");
-            //authController.login("admin", "admin");
+            authController.login("admin", "admin");
 
 
         } catch (InterruptedException | IOException e) {
@@ -75,4 +79,5 @@ public class ApplicationManager {
 
 
     }
+
 }

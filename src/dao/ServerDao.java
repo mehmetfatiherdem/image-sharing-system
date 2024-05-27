@@ -16,5 +16,7 @@ public interface ServerDao {
     void addNonceUsed(String ip, String nonce);
     void addUser(UserDTO user);
     List<UserDTO> getUsers();
-    UserDTO getUser(String ip);
+    UserDTO getUserWithIP(String ip);
+    UserDTO getUserWithUsername(String username);
+
 }

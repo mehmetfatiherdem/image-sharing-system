@@ -7,28 +7,37 @@ import userlocal.UserStorage;
 import java.security.KeyPair;
 
 public class User {
-    private final String IP;
+    private String IP;
     private String username;
     private String password;
     private byte[] passwordSalt;
     private KeyPair keyPair;
-    private UserStorage userStorage;
 
     public User(String username, String password) {
         this.username = username;
         this.password = password;
+    }
+
+
+    public void assignSalt() {
         try {
             this.passwordSalt = Authentication.generateSalt();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void assignKeyPair() {
+        try {
             this.keyPair = Confidentiality.generateRSAKeyPairs(2048);
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-        userStorage = UserStorage.getInstance();
-        userStorage.setPrivateKey(Confidentiality.getByteArrayFromPrivateKey(keyPair.getPrivate()));
-        this.IP = Authentication.generateIP();
     }
 
+    public void assignIP(){
+        this.IP = Authentication.generateIP();
+    }
 
     // Getters and setters
     public String getUsername() {
@@ -49,13 +58,10 @@ public class User {
     public String getPassword() {
         return password;
     }
-    public UserStorage getUserStorage() {
-        return userStorage;
-    }
-    public void setUserStorage(UserStorage userStorage) {
-        this.userStorage = userStorage;
-    }
     public String getIP() {
         return IP;
+    }
+    public void setIP(String IP) {
+        this.IP = IP;
     }
 }

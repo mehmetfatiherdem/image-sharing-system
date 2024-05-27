@@ -1,6 +1,7 @@
 package dao;
 
 import dto.UserDTO;
+import userlocal.UserStorage;
 
 import java.security.PrivateKey;
 import java.util.Optional;
@@ -15,4 +16,6 @@ public interface UserDao {
     Set<String> getServerNonces(String ip);
     void addInMemoryUser(UserDTO user);
     void addPersistentUser(UserDTO user);
+    void addUserStorage(UserStorage userStorage);
+    UserStorage getUserStorageWithIP(String ip);
 }

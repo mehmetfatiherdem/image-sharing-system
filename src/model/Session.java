@@ -4,22 +4,14 @@ import helper.Constants;
 import helper.security.Authentication;
 
 public class Session {
+    private final String sessionID;
     private final String username;
-    private final byte[] sharedSecret;
     private long lastAccessTime;
 
-    public Session(String username, byte[] sharedSecret) {
+    public Session(String username) {
+        this.sessionID = Authentication.generateSessionID();
         this.username = username;
-        this.sharedSecret = sharedSecret;
         this.lastAccessTime = System.currentTimeMillis();
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public boolean verifyMessageIntegrity(String message, byte[] mac) throws Exception {
-        return Authentication.verifyMAC(message, mac, sharedSecret);
     }
 
     public void updateLastAccess() {
@@ -31,4 +23,16 @@ public class Session {
         long sessionDuration = currentTime - lastAccessTime;
         return sessionDuration > Constants.SESSION_TIMEOUT;
     }
+
+    public String getUsername() {
+        return username;
+    }
+    public String getSessionID(){
+        return sessionID;
+    }
+    public long getLastAccessTime() {
+        return lastAccessTime;
+    }
+
+
 }
