@@ -237,6 +237,41 @@ public class ServerServiceImpl implements ServerService, Runnable {
                         System.out.println("MAC not verified");
                     }
 
+                } else if (messageKeyValues.get("message").equals("SESSIONID")) {
+                    if (Arrays.equals(serverRepository.getUserWithIP(messageKeyValues.get("ip")).getMAC(), Confidentiality.decodeStringKeyToByteBase64(messageKeyValues.get("mac")))) {
+                        System.out.println("[server] POST IMAGE MAC verified");
+
+                        var sessionID = Confidentiality.decryptWithPrivateKey(Confidentiality.decodeStringKeyToByteBase64(messageKeyValues.get("sessionID")),
+                                serverRepository.getPrivateKey());
+                        System.out.println("[server] post image arrived session id: " + Arrays.toString(sessionID));
+
+                        var user = serverRepository.getUserWithIP(messageKeyValues.get("ip"));
+                        var session = user.getSession();
+
+                        if(user.getSession() == null) {
+                            System.out.println("[server] userIP: " + messageKeyValues.get("ip") + " not authenticated");
+                            out.writeUTF(Message.formatMessage("SESSION_NOT_FOUND",  new String[]{"ip"},
+                                    new String[]{messageKeyValues.get("ip")}));
+                            continue;
+                        }
+
+                        if(session.isTimedOut()) {
+                            System.out.println("[server] session for userIP: " + messageKeyValues.get("ip") + " is timed out");
+                            user.setSession(null);
+                            out.writeUTF(Message.formatMessage("SESSION_TIME_OUT",  new String[]{"ip"},
+                                    new String[]{messageKeyValues.get("ip")}));
+                            continue;
+                        }
+
+                        session.updateLastAccess();
+
+                        out.writeUTF(Message.formatMessage("SESSION_VALID",  new String[]{"ip"},
+                                new String[]{messageKeyValues.get("ip")}));
+
+
+                    } else {
+                        System.out.println("MAC not verified");
+                    }
                 }
                    else {
                     System.out.println("Invalid message");

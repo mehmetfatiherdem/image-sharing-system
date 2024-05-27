@@ -3,7 +3,6 @@ package controller;
 import model.Certificate;
 import service.UserService;
 
-import java.security.PrivateKey;
 import java.security.PublicKey;
 
 public class UserController {
@@ -13,12 +12,20 @@ public class UserController {
         this.userService = userService;
     }
 
+    public void register(String username, String password) {
+        userService.register(username, password);
+    }
+
+    public void login(String username, String password) {
+        userService.login(username, password);
+    }
+
     public boolean verifyCertificate(Certificate certificate, PublicKey publicKey) {
         return userService.verifyCertificate(certificate, publicKey);
     }
 
-    public void postImage(String imageName, String imagePath, PublicKey serverPublicKey, PrivateKey userPrivateKey) {
-        userService.postImage(imageName, imagePath, serverPublicKey, userPrivateKey);
+    public void postImage(String imageName, String imagePath) {
+        userService.postImage(imageName, imagePath);
     }
 
     public void downloadImage(String imageName) {

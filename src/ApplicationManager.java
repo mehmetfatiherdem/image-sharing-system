@@ -1,4 +1,4 @@
-import controller.AuthController;
+import controller.UserController;
 import dao.UserDao;
 import dao.UserDaoImpl;
 import db.MyDB;
@@ -9,13 +9,9 @@ import repository.UserRepository;
 import repository.UserRepositoryImpl;
 import service.*;
 import socket.TCPClient;
-import userlocal.UserStorage;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 public class ApplicationManager {
     private static ApplicationManager instance;
@@ -66,11 +62,17 @@ public class ApplicationManager {
 
             UserDao userDao = new UserDaoImpl(myDB);
             UserRepository userRepository = new UserRepositoryImpl(userDao);
-            AuthService authService = new AuthServiceImpl(userRepository, client.getSocket());
-            AuthController authController = new AuthController(authService);
+            UserService userService = new UserServiceImpl(userRepository, client.getSocket());
+            UserController userController = new UserController(userService);
 
-            authController.register("admin", "admin");
-            authController.login("admin", "admin");
+            userController.register("admin", "admin");
+            userController.login("admin", "admin");
+
+
+            String imageName = "glew_logo.png";
+            String imagePath = "assets";
+
+           userController.postImage(imageName, imagePath);
 
 
         } catch (InterruptedException | IOException e) {

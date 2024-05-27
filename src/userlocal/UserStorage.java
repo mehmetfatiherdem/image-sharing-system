@@ -12,6 +12,7 @@ public class UserStorage {
     private static UserStorage instance;
     private byte[] serverPublicKey;
     private byte[] privateKey;
+    private String sessionID;
 
     public UserStorage(String ip, String userName, byte[] privateKey) {
         this.ip = ip;
@@ -45,5 +46,13 @@ public class UserStorage {
 
     public String getUserName() {
         return userName;
+    }
+
+    public String getSessionID() {
+        return sessionID;
+    }
+
+    public void setSessionID(String sessionID) {
+        this.sessionID = sessionID;
     }
 }
