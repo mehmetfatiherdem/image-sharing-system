@@ -297,6 +297,30 @@ public class ServerServiceImpl implements ServerService, Runnable {
                                 put("all", "n/a");
 
                             }}));
+
+                            while (true) {
+                                String imageMessage = in.readUTF();
+                                var imageMessageKeyValues = Message.getKeyValuePairs(imageMessage);
+
+                                if (imageMessageKeyValues.get("message").equals("POSTIMAGE")) {
+
+                                    for (var msg: imageMessageKeyValues.entrySet()) {
+                                        System.out.println("[server] key: " + msg.getKey() + " value: " + msg.getValue());
+                                    }
+
+                                    //TODO: save the image in the db with the access list
+
+                                    //TODO: request online users to send their session if it is valid send them notification
+
+
+
+                                    break;
+                                } else {
+                                    System.out.println("Invalid message");
+
+                                }
+                            }
+
                         } else {
                             var list = Message.parseArrayString(messageKeyValues.get("accessList"));
                             var pubKeysResponse = new HashMap<String, String>();
@@ -314,6 +338,27 @@ public class ServerServiceImpl implements ServerService, Runnable {
                             pubKeysResponse.put("ip", messageKeyValues.get("ip") );
 
                             out.writeUTF(Message.formatMessage("SESSION_VALID", pubKeysResponse));
+
+                            while (true) {
+                                String imageMessage = in.readUTF();
+                                var imageMessageKeyValues = Message.getKeyValuePairs(imageMessage);
+
+                                if (imageMessageKeyValues.get("message").equals("POSTIMAGE")) {
+
+                                    for (var msg: imageMessageKeyValues.entrySet()) {
+                                        System.out.println("[server] key: " + msg.getKey() + " value: " + msg.getValue());
+                                    }
+
+                                    //TODO: save the image in the db with the access list
+
+                                    //TODO: no need for notification as we will check the download request with the access list
+
+                                    break;
+                                } else {
+                                    System.out.println("Invalid message");
+                                    break;
+                                }
+                            }
 
                         }
 

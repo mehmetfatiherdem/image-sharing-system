@@ -71,8 +71,8 @@ public class ApplicationManager {
             userController.login("admin", "admin");
 
 
-            String imageName = "glew_logo.png";
-            String imagePath = "assets";
+            String imageName = "glew_logo";
+            String imagePath = "src/assets/glew_logo.png";
 
            userController.postImage(imageName, imagePath, new ArrayList<>(List.of("ALL")));
 

@@ -392,6 +392,8 @@ public class UserServiceImpl implements UserService {
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
             DataInputStream in = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
 
+            var userInMemory = userRepository.getInMemoryUserWithIP(IP);
+
             var encryptedSessionID = Confidentiality.encryptWithPublicKey(sessionID.getBytes(), serverPubKey);
 
             var _accessList = Message.formatListToArrayString(accessList);
@@ -419,6 +421,45 @@ public class UserServiceImpl implements UserService {
                         System.out.println("[client] acked the session");
                         if (messageKeyValues.get("all") != null) {
                             System.out.println("[client] all users have access");
+
+                            ImageFileIO imageFileIO = new ImageFileIO(imagePath);
+                            byte[] imageBytes = imageFileIO.getImageBytes();
+                            SecretKey aesKey = Confidentiality.generateAESKey(256);
+
+                            byte[] iv = Confidentiality.generateIV(16);
+                            byte[] encryptedImageBytes = Confidentiality.encryptWithAES(imageBytes, aesKey, iv);
+
+                            // hash and sign the image
+                            byte[] imageHash = Confidentiality.generateMessageDigest(encryptedImageBytes);
+
+                            var privateKey = userRepository.getUserStorageWithIP(IP).getPrivateKey();
+
+                            if (privateKey == null){
+                                System.out.println("[client] no private key found for user");
+
+                            } else {
+                                byte[] digitalSignature = Authentication.sign(imageHash, Confidentiality.getPrivateKeyFromByteArray(privateKey));
+                                // encrypt the AES key with the server's public key
+                                byte[] encryptedAESKey = Confidentiality.encryptWithPublicKey(aesKey.getEncoded(), serverPubKey);
+
+                                ImagePostData imagePostData = new ImagePostData(imageName, encryptedImageBytes, digitalSignature, encryptedAESKey, iv);
+
+                                var message = Message.formatMessage("POSTIMAGE", new HashMap<>(){{
+                                    put("imageName", imageName);
+                                    put("imageBytes", Confidentiality.encodeByteKeyToStringBase64(encryptedImageBytes));
+                                    put("digitalSignature", Confidentiality.encodeByteKeyToStringBase64(digitalSignature));
+                                    put("encryptedAESKey", Confidentiality.encodeByteKeyToStringBase64(encryptedAESKey));
+                                    put("iv", Confidentiality.encodeByteKeyToStringBase64(iv));
+                                    put("sessionID", Confidentiality.encodeByteKeyToStringBase64(encryptedSessionID));
+                                    put("mac", Confidentiality.encodeByteKeyToStringBase64(hmacGlobal));
+                                }});
+
+                                out.writeUTF(message);
+                            }
+
+
+                        } else {
+                            //TODO: some users have access encrypt with their public keys
                         }
 
                     }
