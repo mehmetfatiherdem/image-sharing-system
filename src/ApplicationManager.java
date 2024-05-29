@@ -84,19 +84,8 @@ public class ApplicationManager {
             String imagePath = "src/assets/glew_logo.png";
 
             userController.postImagee(imageName, imagePath, new ArrayList<>(List.of("ALL")));
+            userController.downloadImage(imageName);
 
-            /*
-            userController.register("admin", "admin");
-            userController.login("admin", "admin");
-
-            userController.listenNotifications();
-
-             */
-
-
-
-
-           //userController.postImage(imageName, imagePath, new ArrayList<>(List.of("ALL")));
 
 
         } catch (InterruptedException | IOException e) {

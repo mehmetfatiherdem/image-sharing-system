@@ -445,7 +445,7 @@ public class UserServiceeImpl implements UserServicee {
             byte[] encryptedImageBytes = Confidentiality.encryptWithAES(imageBytes, aesKey, iv);
 
             // hash and sign the image
-            byte[] imageHash = Confidentiality.generateMessageDigest(encryptedImageBytes);
+            byte[] imageHash = Confidentiality.generateMessageDigest(imageBytes);
 
             var privateKey = userRepository.getUserStorageWithIP(IP).getPrivateKey();
 
@@ -476,6 +476,30 @@ public class UserServiceeImpl implements UserServicee {
                 out.writeUTF(message);
             }
 
+            Thread.sleep(1000);
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void downloadImage(String imageName) {
+        try {
+            DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+
+            var encryptedSessionID = Confidentiality.encryptWithPublicKey(sessionID.getBytes(), serverPubKey);
+
+            var downloadMessage = Message.formatMessage("DOWNLOAD",
+                    new HashMap<>() {{
+                        put("imageName", imageName);
+                        put("sessionID", Confidentiality.encodeByteKeyToStringBase64(encryptedSessionID));
+                        put("ip", IP);
+                        put("mac", Confidentiality.encodeByteKeyToStringBase64(hmacGlobal));
+
+                    }});
+            out.writeUTF(downloadMessage);
 
         } catch (Exception e) {
             e.printStackTrace();

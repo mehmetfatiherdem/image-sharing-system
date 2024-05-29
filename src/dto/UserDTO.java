@@ -5,6 +5,7 @@ import model.Session;
 import userlocal.UserStorage;
 
 import java.security.KeyPair;
+import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -18,6 +19,7 @@ public class UserDTO {
     private boolean isOnline;
     private Certificate certificate;
     private KeyPair keyPair;
+    private PublicKey publicKey;
     private Set<String> noncesUsed = new HashSet<>();
     private UserStorage userStorage;
     private byte[] MAC;
@@ -136,4 +138,13 @@ public class UserDTO {
     public void setSession(Session session) {
         this.session = session;
     }
+
+    public PublicKey getPublicKey() {
+        return publicKey;
+    }
+
+    public void setPublicKey(PublicKey publicKey) {
+        this.publicKey = publicKey;
+    }
+
 }

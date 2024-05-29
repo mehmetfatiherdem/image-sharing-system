@@ -1,40 +1,55 @@
 package helper.image;
 
 import java.util.Arrays;
+import java.util.HashMap;
 
 public class ImageDownloadData {
-    private final byte[] encryptedImage;
-    private final byte[] digitalSignature;
-    private final byte[] encryptedAESKey;
-    private final byte[] certificatePublicKey;
+    private String imageName;
+    private byte[] encryptedImage;
+    private byte[] digitalSignature;
+    private HashMap<String, byte[]> encryptedAESKeys = new HashMap<>();
+    private byte[] certificatePublicKey;
 
-    public ImageDownloadData(byte[] encryptedImage, byte[] digitalSignature, byte[] encryptedAESKey, byte[] certificatePublicKey) {
+    public ImageDownloadData(String imageName, byte[] encryptedImage, byte[] digitalSignature, byte[] certificatePublicKey) {
+        this.imageName = imageName;
         this.encryptedImage = encryptedImage;
         this.digitalSignature = digitalSignature;
-        this.encryptedAESKey = encryptedAESKey;
         this.certificatePublicKey = certificatePublicKey;
     }
 
-    public String getMessageString(){
-        return "IMAGE_DATA" + " " + Arrays.toString(encryptedImage) + " " + Arrays.toString(digitalSignature) + " "
-                + Arrays.toString(encryptedAESKey) + " " + Arrays.toString(certificatePublicKey);
-    }
-
-    // Getters
+    // Getters setters
     public byte[] getEncryptedImage() {
         return encryptedImage;
+    }
+    public void setEncryptedImage(byte[] encryptedImage) {
+        this.encryptedImage = encryptedImage;
     }
 
     public byte[] getDigitalSignature() {
         return digitalSignature;
     }
+    public void setDigitalSignature(byte[] digitalSignature) {
+        this.digitalSignature = digitalSignature;
+    }
 
-    public byte[] getEncryptedAESKey() {
-        return encryptedAESKey;
+    public HashMap<String, byte[]> getEncryptedAESKeys() {
+        return encryptedAESKeys;
+    }
+    public void addEncryptedAESKey(String username, byte[] encryptedAESKey) {
+        this.encryptedAESKeys.put(username, encryptedAESKey);
     }
 
     public byte[] getCertificatePublicKey() {
         return certificatePublicKey;
     }
+    public void setCertificatePublicKey(byte[] certificatePublicKey) {
+        this.certificatePublicKey = certificatePublicKey;
+    }
 
+    public String getImageName() {
+        return imageName;
+    }
+    public void setImageName(String imageName) {
+        this.imageName = imageName;
+    }
 }

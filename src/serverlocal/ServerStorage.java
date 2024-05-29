@@ -1,8 +1,10 @@
 package serverlocal;
 
 import dto.UserDTO;
+import helper.image.ImageDownloadData;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class ServerStorage {
@@ -10,6 +12,7 @@ public class ServerStorage {
     private final List<UserDTO> users = new ArrayList<>();
     private byte[] privateKey;
     private byte[] publicKey;
+    private final HashMap<String, ImageDownloadData> images = new HashMap<>();
 
     private ServerStorage() {
         System.out.println("ServerStorage created");
@@ -20,6 +23,15 @@ public class ServerStorage {
             instance = new ServerStorage();
         }
         return instance;
+    }
+
+
+    public void addImage(String ownerName, ImageDownloadData imageDownloadData) {
+        images.put(ownerName, imageDownloadData);
+    }
+
+    public HashMap<String, ImageDownloadData> getImages() {
+        return images;
     }
 
     public void addUser(UserDTO user) {

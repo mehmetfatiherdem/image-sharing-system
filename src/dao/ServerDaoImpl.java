@@ -1,12 +1,14 @@
 package dao;
 
 import dto.UserDTO;
+import helper.image.ImageDownloadData;
 import helper.security.Confidentiality;
 import model.Certificate;
 import serverlocal.ServerStorage;
 
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -16,6 +18,17 @@ public class ServerDaoImpl implements ServerDao{
 
     public ServerDaoImpl(ServerStorage serverStorage) {
         this.serverStorage = serverStorage;
+    }
+
+    @Override
+    public void saveImage(String ownerName, ImageDownloadData imageDownloadData) {
+        serverStorage.addImage(ownerName, imageDownloadData);
+    }
+
+    @Override
+    public ImageDownloadData getImageByName(String imageName) {
+        var images = serverStorage.getImages();
+        return images.get(imageName);
     }
 
     public void saveCertificate(Certificate certificate, String ip) {

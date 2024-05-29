@@ -1,14 +1,18 @@
 package dao;
 
 import dto.UserDTO;
+import helper.image.ImageDownloadData;
 import model.Certificate;
 
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
 public interface ServerDao {
+    void saveImage(String ownerName, ImageDownloadData imageDownloadData);
+    ImageDownloadData getImageByName(String imageName);
     void saveCertificate(Certificate certificate, String ip);
     PublicKey getServerPublicKey();
     PrivateKey getServerPrivateKey();

@@ -1,6 +1,7 @@
 package repository;
 
 import dto.UserDTO;
+import helper.image.ImageDownloadData;
 import model.Certificate;
 
 import java.security.PrivateKey;
@@ -9,6 +10,8 @@ import java.util.List;
 import java.util.Set;
 
 public interface ServerRepository {
+    void saveImage(String ownerName, ImageDownloadData imageDownloadData);
+    ImageDownloadData getImageByName(String imageName);
     void addCertificate(Certificate certificate, String ip);
     PublicKey getPublicKey();
     PrivateKey getPrivateKey();

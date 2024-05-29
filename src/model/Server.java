@@ -8,6 +8,7 @@ import repository.ServerRepositoryImpl;
 import serverlocal.ServerStorage;
 import service.NotificationServiceImpl;
 import service.ServerServiceImpl;
+import service.ServerServiceeImpl;
 
 import java.net.BindException;
 import java.net.ServerSocket;
@@ -28,7 +29,8 @@ public class Server implements Runnable{
     private ServerSocket serverSocket;
     private Socket socket;
     private ServerStorage serverStorage;
-    private static Set<ServerServiceImpl> clientHandlers = ConcurrentHashMap.newKeySet();
+    //private static Set<ServerServiceImpl> clientHandlers = ConcurrentHashMap.newKeySet();
+    private static Set<ServerServiceeImpl> clientHandlers = ConcurrentHashMap.newKeySet();
     private static Set<NotificationServiceImpl> notificationHandlers = ConcurrentHashMap.newKeySet();
 
 
@@ -63,14 +65,21 @@ public class Server implements Runnable{
             while (true) {
 
                 socket = serverSocket.accept();
-
+                /*
                 ServerServiceImpl serverService = new ServerServiceImpl(serverRepository, socket);
                 NotificationServiceImpl notificationService = new NotificationServiceImpl(serverRepository, socket);
 
-                notificationHandlers.add(notificationService);
-                clientHandlers.add(serverService);
+                 */
 
-                clientPool.execute(serverService);
+                ServerServiceeImpl serverServicee = new ServerServiceeImpl(serverRepository, socket);
+
+                // notificationHandlers.add(notificationService);
+                // clientHandlers.add(serverService);
+
+                //clientPool.execute(serverService);
+
+                clientHandlers.add(serverServicee);
+                clientPool.execute(serverServicee);
 
             }
 
@@ -105,7 +114,7 @@ public class Server implements Runnable{
     public ServerStorage getServerStorage() {
         return serverStorage;
     }
-    public static Set<ServerServiceImpl> getClientHandlers() {
+    public static Set<ServerServiceeImpl> getClientHandlers() {
         return clientHandlers;
     }
     public static Set<NotificationServiceImpl> getNotificationHandlers() {

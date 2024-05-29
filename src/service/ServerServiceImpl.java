@@ -1,5 +1,6 @@
 package service;
 
+import db.MyDB;
 import dto.UserDTO;
 import helper.format.Message;
 import helper.image.ImageDownloadData;
@@ -165,6 +166,7 @@ public class ServerServiceImpl implements ServerService, Runnable {
                         user.setPassword(hashedPassword);
                         user.setPasswordSalt(retrievedSalt);
                         user.setUsername(messageKeyValues.get("username"));
+                        user.setPublicKey(Confidentiality.getPublicKeyFromByteArray(Confidentiality.decodeStringKeyToByteBase64(messageKeyValues.get("publicKey"))));
                         user.setOnline(false);
 
 
@@ -314,6 +316,33 @@ public class ServerServiceImpl implements ServerService, Runnable {
 
                                     //TODO: save the image in the db with the access list
 
+                                    var imageDownloadData = new ImageDownloadData(
+                                            imageMessageKeyValues.get("imageName"),
+                                            Confidentiality.decodeStringKeyToByteBase64(imageMessageKeyValues.get("imageBytes")),
+                                            Confidentiality.decodeStringKeyToByteBase64(imageMessageKeyValues.get("digitalSignature")),
+                                            user.getPublicKey().getEncoded()
+                                    );
+
+                                    for (var msg: imageMessageKeyValues.entrySet()) {
+                                        if (!msg.getKey().equals("message") && !msg.getKey().equals("imageName") &&
+                                                !msg.getKey().equals("imageBytes") && !msg.getKey().equals("digitalSignature") &&
+                                        !msg.getKey().equals("iv") && !msg.getKey().equals("sessionID") && !msg.getKey().equals("mac")) {
+                                            imageDownloadData.addEncryptedAESKey(msg.getKey(),
+                                                    Confidentiality.decodeStringKeyToByteBase64(msg.getValue()));
+                                        }
+                                    }
+
+                                    System.out.println("******************");
+                                    System.out.println("[server]access list image data save val");
+
+                                    for (var msg: imageDownloadData.getEncryptedAESKeys().entrySet()) {
+                                        System.out.println("[server] key: " + msg.getKey() + " value: " + Arrays.toString(msg.getValue()));
+                                    }
+
+                                    System.out.println("******************");
+
+                                    serverRepository.saveImage(user.getUsername(), imageDownloadData);
+
                                     // send notification to all online users
 
                                     for (var handler: Server.getNotificationHandlers()) {
@@ -377,6 +406,9 @@ public class ServerServiceImpl implements ServerService, Runnable {
                     } else {
                         System.out.println("MAC not verified");
                     }
+                } else if (messageKeyValues.get("message").equals("DOWNLOAD")) {
+                    System.out.println("[server] DOWNLOAD message arrived");
+
                 }
                    else {
                     System.out.println("Invalid message");
