@@ -14,4 +14,5 @@ public interface UserService {
     void postImage(String imageName, String imagePath, List<String> accessList);
     void downloadImage(String imageName);
     void retrieveImage(ImageDownloadData imageDownloadData);
+    void listenNotifications();
 }

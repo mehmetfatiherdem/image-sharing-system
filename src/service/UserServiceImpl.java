@@ -37,6 +37,48 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public void listenNotifications() {
+        try {
+            DataInputStream in = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
+            DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+            System.out.println("[client] " + IP + " Listening for notifications");
+
+            while (true) {
+                String response = in.readUTF();
+                var responseMessage = Message.getKeyValuePairs(response);
+
+                System.out.println("[client][notification]: client message: " + response);
+
+                if(responseMessage.get("message").equals("REQUEST_SESSION_NOTIFICATION")) {
+
+                    out.writeUTF(Message.formatMessage("SESSION_NOTIFICATION", new HashMap<>(){{
+                        put("sessionID", Confidentiality.encodeByteKeyToStringBase64(Confidentiality.encryptWithPublicKey(sessionID.getBytes(), serverPubKey)));
+                        put("mac", Confidentiality.encodeByteKeyToStringBase64(hmacGlobal));
+                        put("ip", IP);
+                    }}));
+
+
+                } else if (responseMessage.get("message").equals("SESSION_NOT_FOUND_NOTIFICATION") ||
+                        responseMessage.get("message").equals("SESSION_TIME_OUT")) {
+                    break;
+                } else if(responseMessage.get("message").equals("NEW_IMAGE")) {
+                            System.out.println("[client] New image received: ");
+                            for (Map.Entry<String, String> entry : responseMessage.entrySet()) {
+                                System.out.println(entry.getKey() + ": " + entry.getValue());
+                            }
+                        }
+
+
+
+            }
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
     public void login(String username, String password) {
 
 
@@ -472,48 +514,6 @@ public class UserServiceImpl implements UserService {
             e.printStackTrace();
         }
 
-        /*
-        try {
-
-
-            ImageFileIO imageFileIO = new ImageFileIO(imagePath);
-            byte[] imageBytes = imageFileIO.getImageBytes();
-            SecretKey aesKey = Confidentiality.generateAESKey(256);
-
-            byte[] iv = Confidentiality.generateIV(16);
-            byte[] encryptedImageBytes = Confidentiality.encryptWithAES(imageBytes, aesKey, iv);
-
-            // hash and sign the image
-            byte[] imageHash = Confidentiality.generateMessageDigest(encryptedImageBytes);
-            byte[] digitalSignature = Authentication.sign(imageHash, userPrivateKey);
-
-            // encrypt the AES key with the server's public key
-            byte[] encryptedAESKey = Confidentiality.encryptWithPublicKey(aesKey.getEncoded(), serverPublicKey);
-
-            ImagePostData imagePostData = new ImagePostData(imageName, encryptedImageBytes, digitalSignature, encryptedAESKey, iv);
-
-
-            try{
-
-                DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-
-                var macKey = Authentication.generateMACKey();
-                var mac = Authentication.generateMAC(imagePostData.getMessageString().getBytes(), macKey);
-
-                //FIXME: we changed message format to json-like so change this
-                var message = Authentication.appendMACToMessage(imagePostData.getMessageString().getBytes(), mac);
-
-                out.writeUTF(message);
-
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-             */
     }
 
     @Override

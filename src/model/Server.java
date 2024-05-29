@@ -6,6 +6,7 @@ import helper.security.Confidentiality;
 import repository.ServerRepository;
 import repository.ServerRepositoryImpl;
 import serverlocal.ServerStorage;
+import service.NotificationServiceImpl;
 import service.ServerServiceImpl;
 
 import java.net.BindException;
@@ -28,6 +29,7 @@ public class Server implements Runnable{
     private Socket socket;
     private ServerStorage serverStorage;
     private static Set<ServerServiceImpl> clientHandlers = ConcurrentHashMap.newKeySet();
+    private static Set<NotificationServiceImpl> notificationHandlers = ConcurrentHashMap.newKeySet();
 
 
     private Server(int port) throws NoSuchAlgorithmException {
@@ -45,7 +47,7 @@ public class Server implements Runnable{
 
     @Override
     public void run() {
-        ExecutorService threadPool = Executors.newFixedThreadPool(10);
+        ExecutorService clientPool = Executors.newFixedThreadPool(10);
 
         try {
             serverSocket = new ServerSocket(port);
@@ -61,9 +63,14 @@ public class Server implements Runnable{
             while (true) {
 
                 socket = serverSocket.accept();
+
                 ServerServiceImpl serverService = new ServerServiceImpl(serverRepository, socket);
+                NotificationServiceImpl notificationService = new NotificationServiceImpl(serverRepository, socket);
+
+                notificationHandlers.add(notificationService);
                 clientHandlers.add(serverService);
-                threadPool.execute(serverService);
+
+                clientPool.execute(serverService);
 
             }
 
@@ -97,6 +104,12 @@ public class Server implements Runnable{
     }
     public ServerStorage getServerStorage() {
         return serverStorage;
+    }
+    public static Set<ServerServiceImpl> getClientHandlers() {
+        return clientHandlers;
+    }
+    public static Set<NotificationServiceImpl> getNotificationHandlers() {
+        return notificationHandlers;
     }
 
     // remove this

@@ -65,16 +65,38 @@ public class ApplicationManager {
             UserDao userDao = new UserDaoImpl(myDB);
             UserRepository userRepository = new UserRepositoryImpl(userDao);
             UserService userService = new UserServiceImpl(userRepository, client.getSocket());
-            UserController userController = new UserController(userService);
+            UserServicee userServicee = new UserServiceeImpl(userRepository, client.getSocket());
+            UserController userController = new UserController(userService, userServicee);
 
-            userController.register("admin", "admin");
-            userController.login("admin", "admin");
+            new Thread(() -> {
+                try {
+                    userController.listenServer();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }).start();
 
+            userController.registerr("admin", "admin");
+
+            userController.loginn("admin", "admin");
 
             String imageName = "glew_logo";
             String imagePath = "src/assets/glew_logo.png";
 
-           userController.postImage(imageName, imagePath, new ArrayList<>(List.of("ALL")));
+            userController.postImagee(imageName, imagePath, new ArrayList<>(List.of("ALL")));
+
+            /*
+            userController.register("admin", "admin");
+            userController.login("admin", "admin");
+
+            userController.listenNotifications();
+
+             */
+
+
+
+
+           //userController.postImage(imageName, imagePath, new ArrayList<>(List.of("ALL")));
 
 
         } catch (InterruptedException | IOException e) {

@@ -86,6 +86,9 @@ public class UserDTO {
     public KeyPair getKeyPair() {
         return keyPair;
     }
+    public void setKeyPair(KeyPair keyPair) {
+        this.keyPair = keyPair;
+    }
     public byte[] getPassword() {
         return password;
     }
