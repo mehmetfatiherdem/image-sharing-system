@@ -12,9 +12,9 @@ import repository.UserRepository;
 import userlocal.UserStorage;
 
 import javax.crypto.SecretKey;
-import java.io.BufferedInputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.*;
 import java.net.Socket;
 import java.security.PublicKey;
 import java.util.*;
@@ -519,6 +519,46 @@ public class UserServiceeImpl implements UserServicee {
         try {
             if (messageKeyValues.get("access").equals("All")) {
                 System.out.println("[client] image accessible to all");
+
+                var decryptedAesKey = Confidentiality.decryptWithPrivateKey(Confidentiality.decodeStringKeyToByteBase64(messageKeyValues.get("encryptedAESKey")),
+                        userRepository.getInMemoryUserWithIP(IP).get().getKeyPair().getPrivate());
+                var iv = Confidentiality.decodeStringKeyToByteBase64(messageKeyValues.get("iv"));
+                var encryptedImage = Confidentiality.decodeStringKeyToByteBase64(messageKeyValues.get("imageBytes"));
+                var decryptedImage = Confidentiality.decryptWithAES(encryptedImage, Confidentiality.getSecretKeyFromBytes(decryptedAesKey), iv);
+
+                // verify integrity with digital signature
+                var digitalSignature = Confidentiality.decodeStringKeyToByteBase64(messageKeyValues.get("digitalSignature"));
+
+                if (Authentication.verify(Confidentiality.generateMessageDigest(decryptedImage), digitalSignature, Confidentiality.getPublicKeyFromString(messageKeyValues.get("ownerPublicKey")))){
+                    System.out.println("[client] image verified with signature");
+
+                    // store the image in the folder downloads under src as png
+                    // Convert byte array to BufferedImage
+                    BufferedImage bufferedImage = null;
+                    try (ByteArrayInputStream bais = new ByteArrayInputStream(decryptedImage)) {
+                        bufferedImage = ImageIO.read(bais);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        return;
+                    }
+
+                    File outputDir = new File("src/downloads");
+
+                    // Write the BufferedImage to a file in the src/downloads directory
+                    File outputFile = new File(outputDir, "image.png");
+                    try {
+                        ImageIO.write(bufferedImage, "png", outputFile);
+                        System.out.println("Image saved successfully: " + outputFile.getAbsolutePath());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                } else {
+                    System.out.println("[client] image not verified with signature");
+                }
+
+
+
             } else {
                 System.out.println("[client] image accessible to: " + messageKeyValues.get("access"));
             }

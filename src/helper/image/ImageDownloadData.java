@@ -1,6 +1,5 @@
 package helper.image;
 
-import java.util.Arrays;
 import java.util.HashMap;
 
 public class ImageDownloadData {
@@ -8,7 +7,7 @@ public class ImageDownloadData {
     private byte[] encryptedImage;
     private byte[] digitalSignature;
     private byte[] iv;
-    private HashMap<String, byte[]> encryptedAESKeys = new HashMap<>();
+    private HashMap<String, byte[]> aesKeys = new HashMap<>();
     private byte[] certificatePublicKey;
 
     public ImageDownloadData(String imageName, byte[] encryptedImage, byte[] digitalSignature, byte[] certificatePublicKey, byte[] iv) {
@@ -34,11 +33,11 @@ public class ImageDownloadData {
         this.digitalSignature = digitalSignature;
     }
 
-    public HashMap<String, byte[]> getEncryptedAESKeys() {
-        return encryptedAESKeys;
+    public HashMap<String, byte[]> getAesKeys() {
+        return aesKeys;
     }
     public void addEncryptedAESKey(String username, byte[] encryptedAESKey) {
-        this.encryptedAESKeys.put(username, encryptedAESKey);
+        this.aesKeys.put(username, encryptedAESKey);
     }
 
     public byte[] getCertificatePublicKey() {

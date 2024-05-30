@@ -3,6 +3,7 @@ package helper.security;
 import javax.crypto.*;
 import javax.crypto.spec.DHParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 import java.security.*;
 import java.security.spec.InvalidParameterSpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -47,6 +48,10 @@ public class Confidentiality {
         SecureRandom secureRandom = new SecureRandom();
         secureRandom.nextBytes(iv);
         return iv;
+    }
+
+    public static SecretKey getSecretKeyFromBytes(byte[] keyBytes) {
+        return new SecretKeySpec(keyBytes, "AES");
     }
 
     public static byte[] generateMessageDigest(byte[] data) throws NoSuchAlgorithmException {

@@ -12,19 +12,12 @@ import model.Server;
 import model.Session;
 import repository.ServerRepository;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.IOException;
 import java.net.Socket;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
@@ -348,9 +341,19 @@ public class ServerServiceeImpl implements ServerServicee, Runnable{
                             !msg.getKey().equals("imageBytes") && !msg.getKey().equals("digitalSignature") &&
                             !msg.getKey().equals("iv") && !msg.getKey().equals("sessionID") && !msg.getKey().equals("mac")
                             && !msg.getKey().equals("ip")) {
-                        imageDownloadData.addEncryptedAESKey(msg.getKey(),
-                                Confidentiality.decodeStringKeyToByteBase64(msg.getValue()));
-                        imageMetaData.addToAccessList(msg.getKey());
+
+                        if (msg.getKey().equals("all")) {
+                            var decryptedAESKey = Confidentiality.decryptWithPrivateKey(Confidentiality.decodeStringKeyToByteBase64(msg.getValue()),
+                                    serverRepository.getPrivateKey());
+                            imageDownloadData.addEncryptedAESKey(msg.getKey(), decryptedAESKey);
+                            imageMetaData.addToAccessList(msg.getKey());
+                        } else {
+                            imageDownloadData.addEncryptedAESKey(msg.getKey(),
+                                    Confidentiality.decodeStringKeyToByteBase64(msg.getValue()));
+                            imageMetaData.addToAccessList(msg.getKey());
+                        }
+
+
                     }
                 }
 
@@ -359,7 +362,7 @@ public class ServerServiceeImpl implements ServerServicee, Runnable{
 
                 imageMetaData.setOwnerName(user.getUsername());
 
-                for (var msg : imageDownloadData.getEncryptedAESKeys().entrySet()) {
+                for (var msg : imageDownloadData.getAesKeys().entrySet()) {
                     System.out.println("[server] key: " + msg.getKey() + " value: " + Arrays.toString(msg.getValue()));
                 }
 
@@ -464,7 +467,8 @@ public class ServerServiceeImpl implements ServerServicee, Runnable{
 
                                if (img.getKey().getAccessList().contains("all")) {
 
-                                   var encryptedAESKey = img.getValue().getEncryptedAESKeys().get("all");
+                                   var aesKey = img.getValue().getAesKeys().get("all");
+                                   var encryptedAESKey = Confidentiality.encryptWithPublicKey(aesKey, serverRepository.getUserWithIP(messageKeyValues.get("ip")).getPublicKey());
                                     var downloadMessage = Message.formatMessage("DOWNLOAD_IMAGE", new HashMap<>() {{
                                         put("ip", messageKeyValues.get("ip"));
                                         put("imageName", img.getValue().getImageName());
@@ -480,7 +484,7 @@ public class ServerServiceeImpl implements ServerServicee, Runnable{
 
                                } else if (img.getKey().getAccessList().contains(user.getUsername())) {
 
-                                    var encryptedAESKey = img.getValue().getEncryptedAESKeys().get(user.getUsername());
+                                    var encryptedAESKey = img.getValue().getAesKeys().get(user.getUsername());
                                     var downloadMessage = Message.formatMessage("DOWNLOAD_IMAGE", new HashMap<>() {{
                                         put("ip", messageKeyValues.get("ip"));
                                         put("imageName", img.getValue().getImageName());
