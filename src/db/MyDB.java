@@ -9,6 +9,7 @@ import userlocal.UserStorage;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class MyDB {
     private static MyDB instance;
@@ -20,22 +21,22 @@ public class MyDB {
 
     }
 
-    public static MyDB getInstance() {
+    public static synchronized  MyDB getInstance() {
         if (instance == null) {
             instance = new MyDB();
         }
         return instance;
     }
 
-    public void connect() {
+    public synchronized  void connect() {
         System.out.println("Connected to MyDB");
     }
 
-    public void addInMemoryUser(UserDTO userDTO) {
+    public synchronized  void addInMemoryUser(UserDTO userDTO) {
         inMemoryUsers.add(userDTO);
     }
 
-    public void addPersistentUser(String IP, String username, byte[] password, byte[] passwordSalt, Certificate certificate) {
+    public synchronized  void addPersistentUser(String IP, String username, byte[] password, byte[] passwordSalt, Certificate certificate) {
         try{
             UserEntity userEntity =
                     new UserEntity(IP, username, password, passwordSalt, certificate);
@@ -45,27 +46,27 @@ public class MyDB {
         }
     }
 
-    public void addUserStorage(UserStorage userStorage) {
+    public synchronized  void addUserStorage(UserStorage userStorage) {
         userStorages.add(userStorage);
     }
 
-    public Set<UserStorage> getUserStorages() {
+    public synchronized  Set<UserStorage> getUserStorages() {
         return userStorages;
     }
 
-    public ArrayList<UserDTO> getInMemoryUsers() {
+    public synchronized  ArrayList<UserDTO> getInMemoryUsers() {
         return inMemoryUsers;
     }
 
-    public ArrayList<UserEntity> getPersistentUsers() {
+    public synchronized  ArrayList<UserEntity> getPersistentUsers() {
         return persistentUsers;
     }
 
-    public void removeInMemoryUser(UserDTO userDTO) {
+    public synchronized  void removeInMemoryUser(UserDTO userDTO) {
         inMemoryUsers.remove(userDTO);
     }
 
-    public void removePersistentUser(User user) {
+    public synchronized  void removePersistentUser(User user) {
         persistentUsers.remove(user);
     }
 }

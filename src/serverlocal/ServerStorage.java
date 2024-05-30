@@ -19,7 +19,7 @@ public class ServerStorage {
         System.out.println("ServerStorage created");
     }
 
-    public static ServerStorage getInstance() {
+    public static synchronized ServerStorage getInstance() {
         if (instance == null) {
             instance = new ServerStorage();
         }
@@ -27,36 +27,36 @@ public class ServerStorage {
     }
 
 
-    public void addImage(ImageMetaData imageMetaData, ImageDownloadData imageDownloadData) {
+    public synchronized void addImage(ImageMetaData imageMetaData, ImageDownloadData imageDownloadData) {
         images.put(imageMetaData, imageDownloadData);
     }
 
-    public HashMap<ImageMetaData, ImageDownloadData> getImages() {
+    public synchronized HashMap<ImageMetaData, ImageDownloadData> getImages() {
         return images;
     }
 
-    public void addUser(UserDTO user) {
+    public synchronized void addUser(UserDTO user) {
         users.add(user);
     }
 
     // Getters and Setters
-    public List<UserDTO> getUsers() {
+    public synchronized List<UserDTO> getUsers() {
         return users;
     }
 
-    public byte[] getPrivateKey() {
+    public synchronized byte[] getPrivateKey() {
         return privateKey;
     }
 
-    public void setPrivateKey(byte[] privateKey) {
+    public synchronized void setPrivateKey(byte[] privateKey) {
         this.privateKey = privateKey;
     }
 
-    public byte[] getPublicKey() {
+    public synchronized byte[] getPublicKey() {
         return publicKey;
     }
 
-    public void setPublicKey(byte[] publicKey) {
+    public synchronized void setPublicKey(byte[] publicKey) {
         this.publicKey = publicKey;
     }
 }

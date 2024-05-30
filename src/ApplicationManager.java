@@ -50,7 +50,11 @@ public class ApplicationManager {
             e.printStackTrace();
         }
 
-
+        UserDao userDao = new UserDaoImpl(myDB);
+        UserRepository userRepository;
+        UserService userService;
+        UserServicee userServicee;
+        UserController userController;
 
 
         TCPClient client;
@@ -62,11 +66,11 @@ public class ApplicationManager {
 
             Thread.sleep(1000);
 
-            UserDao userDao = new UserDaoImpl(myDB);
-            UserRepository userRepository = new UserRepositoryImpl(userDao);
-            UserService userService = new UserServiceImpl(userRepository, client.getSocket());
-            UserServicee userServicee = new UserServiceeImpl(userRepository, client.getSocket());
-            UserController userController = new UserController(userService, userServicee);
+            //UserDao userDao = new UserDaoImpl(myDB);
+            userRepository = new UserRepositoryImpl(userDao);
+            userService = new UserServiceImpl(userRepository, client.getSocket());
+            userServicee = new UserServiceeImpl(userRepository, client.getSocket());
+            userController = new UserController(userService, userServicee);
 
             new Thread(() -> {
                 try {
@@ -80,16 +84,74 @@ public class ApplicationManager {
 
             userController.loginn("admin", "admin");
 
+
+
+        } catch (InterruptedException | IOException e) {
+            throw new RuntimeException(e);
+        }
+
+
+        UserDao userDao2 = new UserDaoImpl(myDB);
+        UserRepository userRepository2;
+        UserService userService2;
+        UserServicee userServicee2;
+        UserController userController2;
+
+        TCPClient client2;
+        try {
+
+
+            client2 = new TCPClient(InetAddress.getLocalHost(), Constants.SERVER_PORT);
+
+            Thread clientThread = new Thread(client2);
+            clientThread.start();
+
+            Thread.sleep(1000);
+
+            //UserDao userDao = new UserDaoImpl(myDB);
+            userRepository2 = new UserRepositoryImpl(userDao2);
+            userService2 = new UserServiceImpl(userRepository2, client2.getSocket());
+            userServicee2 = new UserServiceeImpl(userRepository2, client2.getSocket());
+            userController2 = new UserController(userService2, userServicee2);
+
+            new Thread(() -> {
+                try {
+                    userController2.listenServer();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }).start();
+
+            userController2.registerr("xenia", "holt123");
+
+            userController2.loginn("xenia", "holt123");
+
+
+
+
+
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
+
+        try {
+            Thread.sleep(10000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        try {
             String imageName = "glew_logo";
             String imagePath = "src/assets/glew_logo.png";
 
             userController.postImagee(imageName, imagePath, new ArrayList<>(List.of("ALL")));
-            Thread.sleep(1000);
-            userController.downloadImage(imageName);
 
+            Thread.sleep(8000);
 
+            userController2.downloadImage(imageName);
 
-        } catch (InterruptedException | IOException e) {
+        } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
 

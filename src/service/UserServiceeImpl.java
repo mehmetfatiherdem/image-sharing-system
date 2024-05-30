@@ -28,7 +28,7 @@ public class UserServiceeImpl implements UserServicee {
     private final UserRepository userRepository;
     private final Socket socket;
     private String sessionID;
-    private PublicKey serverPubKey;
+    private volatile PublicKey serverPubKey;
     private byte[] hmacK;
     private byte[] hmacGlobal;
     private String IP;
@@ -39,6 +39,10 @@ public class UserServiceeImpl implements UserServicee {
     private final Condition postImageCanContinue = postImageLock.newCondition();
     private boolean postImageContinue = false;
     private boolean isSessionValid = false;
+
+    private final Lock macLock = new ReentrantLock();
+    private final Condition macCanContinue = macLock.newCondition();
+    private boolean macContinue = false;
 
 
     public UserServiceeImpl(UserRepository userRepository, Socket socket) {
@@ -74,7 +78,7 @@ public class UserServiceeImpl implements UserServicee {
 
             if (messageKeyValues.get("message").equals("PUBLICKEY")) {
                 var serverNonce = messageKeyValues.get("nonce");
-                System.out.println("[client] Server nonce received: " + serverNonce);
+                System.out.println("[client] " + IP + " Server nonce received: " + serverNonce);
 
                 if (serverNoncesUsed.contains(serverNonce)) {
                     System.out.println("Nonce already used replay attack alert!!!");
@@ -84,9 +88,14 @@ public class UserServiceeImpl implements UserServicee {
                     serverNoncesUsed.add(serverNonce);
                     //user.getUserStorage().addServerNonceUsed(serverNonce);
                     //userRepository.getUserStorageWithIP(messageKeyValues.get("ip")).setServerPublicKey(Base64.getDecoder().decode(messageKeyValues.get("publicKey")));
-                    serverPubKey = Confidentiality.getPublicKeyFromByteArray(Base64.getDecoder().decode(messageKeyValues.get("publicKey")));
+
+
+                    setServerPubKey(Confidentiality.getPublicKeyFromString(messageKeyValues.get("publicKey")));
+
+                    System.out.println("[client] " + IP + "Server public key received: " + serverPubKey.toString());
+
                     //user.getUserStorage().setServerPublicKey(Base64.getDecoder().decode(messageKeyValues.get("publicKey")));
-/*
+
                     macLock.lock();
                     try {
                         macContinue = true;
@@ -95,7 +104,7 @@ public class UserServiceeImpl implements UserServicee {
                         macLock.unlock();
                     }
 
- */
+
 
                 }
 
@@ -185,7 +194,7 @@ public class UserServiceeImpl implements UserServicee {
             } else if (messageKeyValues.get("message").equals("REQUEST_SESSION_NOTIFICATION")) {
                 System.out.println("[client] request session notification received");
                 out.writeUTF(Message.formatMessage("SESSION_NOTIFICATION", new HashMap<>(){{
-                    put("sessionID", Confidentiality.encodeByteKeyToStringBase64(Confidentiality.encryptWithPublicKey(sessionID.getBytes(), serverPubKey)));
+                    put("sessionID", Confidentiality.encodeByteKeyToStringBase64(Confidentiality.encryptWithPublicKey(sessionID.getBytes(), getServerPubKey())));
                     put("ip", IP);
                 }}));
 
@@ -240,7 +249,7 @@ public class UserServiceeImpl implements UserServicee {
     @Override
     public void sendMacKey() {
         try {
-            /*
+
             macLock.lock();
             try {
                 while (!macContinue) {
@@ -250,7 +259,7 @@ public class UserServiceeImpl implements UserServicee {
                 macLock.unlock();
             }
 
-             */
+
 
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
@@ -263,7 +272,19 @@ public class UserServiceeImpl implements UserServicee {
             hmacGlobal = MAC;
 
 
-            byte[] encryptedMacKey = Confidentiality.encryptWithPublicKey(macKey, serverPubKey);
+
+            System.out.println("[client] " + IP + " MAC key generated: " + Arrays.toString(macKey));
+
+            if (getServerPubKey() == null) {
+                System.out.println("[client] " + IP + " Server public key null");
+
+            } else {
+                System.out.println("[client] " + IP + " getServerPubKey(): " + getServerPubKey().toString());
+
+            }
+
+
+            byte[] encryptedMacKey = Confidentiality.encryptWithPublicKey(macKey, getServerPubKey());
             String macKeyString = Message.formatMessage("MAC", new HashMap<>(){{
                 put("secretMessage", "Secretmsg123!");
                 put("macKey", Confidentiality.encodeByteKeyToStringBase64(encryptedMacKey));
@@ -313,8 +334,8 @@ public class UserServiceeImpl implements UserServicee {
             var aesKey = Confidentiality.generateAESKey(256);
             var iv = Confidentiality.generateIV(16);
             var encryptedPassword = Confidentiality.encryptWithAES(password.getBytes(), aesKey, iv);
-            var encryptedIv = Confidentiality.encryptWithPublicKey(iv, serverPubKey);
-            var encryptedAesKey = Confidentiality.encryptWithPublicKey(aesKey.getEncoded(), serverPubKey);
+            var encryptedIv = Confidentiality.encryptWithPublicKey(iv, getServerPubKey());
+            var encryptedAesKey = Confidentiality.encryptWithPublicKey(aesKey.getEncoded(), getServerPubKey());
 
 
             String loginMessagePayload = Message.formatMessage("LOGIN", new HashMap<>(){{
@@ -377,9 +398,9 @@ public class UserServiceeImpl implements UserServicee {
             var aesKey = Confidentiality.generateAESKey(256);
             var iv = Confidentiality.generateIV(16);
             var encryptedPassword = Confidentiality.encryptWithAES(password.getBytes(), aesKey, iv);
-            var encryptedIv = Confidentiality.encryptWithPublicKey(iv, serverPubKey);
-            var encryptedAesKey = Confidentiality.encryptWithPublicKey(aesKey.getEncoded(), serverPubKey);
-            var encryptedSalt = Confidentiality.encryptWithPublicKey(user.getPasswordSalt(), serverPubKey);
+            var encryptedIv = Confidentiality.encryptWithPublicKey(iv, getServerPubKey());
+            var encryptedAesKey = Confidentiality.encryptWithPublicKey(aesKey.getEncoded(), getServerPubKey());
+            var encryptedSalt = Confidentiality.encryptWithPublicKey(user.getPasswordSalt(), getServerPubKey());
 
             String message = Message.formatMessage("REGISTER", new HashMap<>(){{
                 put("username", username);
@@ -410,7 +431,7 @@ public class UserServiceeImpl implements UserServicee {
         try {
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
-            var encryptedSessionID = Confidentiality.encryptWithPublicKey(sessionID.getBytes(), serverPubKey);
+            var encryptedSessionID = Confidentiality.encryptWithPublicKey(sessionID.getBytes(), getServerPubKey());
 
             var _accessList = Message.formatListToArrayString(accessList);
 
@@ -496,7 +517,7 @@ public class UserServiceeImpl implements UserServicee {
         try {
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
-            var encryptedSessionID = Confidentiality.encryptWithPublicKey(sessionID.getBytes(), serverPubKey);
+            var encryptedSessionID = Confidentiality.encryptWithPublicKey(sessionID.getBytes(), getServerPubKey());
 
             var downloadMessage = Message.formatMessage("DOWNLOAD",
                     new HashMap<>() {{
@@ -545,10 +566,10 @@ public class UserServiceeImpl implements UserServicee {
                     File outputDir = new File("src/downloads");
 
                     // Write the BufferedImage to a file in the src/downloads directory
-                    File outputFile = new File(outputDir, "image.png");
+                    File outputFile = new File(outputDir, messageKeyValues.get("imageName") + ".png");
                     try {
                         ImageIO.write(bufferedImage, "png", outputFile);
-                        System.out.println("Image saved successfully: " + outputFile.getAbsolutePath());
+                        System.out.println("[client] " + IP  + " image saved to downloads folder as png in " + outputFile.getAbsolutePath());
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -566,4 +587,13 @@ public class UserServiceeImpl implements UserServicee {
             e.printStackTrace();
         }
     }
+
+    public synchronized void setServerPubKey(PublicKey key) {
+        this.serverPubKey = key;
+    }
+
+    public synchronized PublicKey getServerPubKey() {
+        return this.serverPubKey;
+    }
+
 }

@@ -105,6 +105,9 @@ public class ServerServiceeImpl implements ServerServicee, Runnable{
                         put("nonce", nonceServer);
                     }});
 
+                    System.out.println("[server] Sending public key to client " + messageKeyValues.get("ip"));
+                    System.out.println("[server] public key in bytes: " + Arrays.toString(serverRepository.getPublicKey().getEncoded()));
+
                     out.writeUTF(publicKeyMessage);
                 }
             } else if (messageKeyValues.get("message").equals("MAC")) {
