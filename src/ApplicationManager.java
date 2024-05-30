@@ -135,6 +135,50 @@ public class ApplicationManager {
         }
 
 
+        UserDao userDao3 = new UserDaoImpl(myDB);
+        UserRepository userRepository3;
+        UserService userService3;
+        UserServicee userServicee3;
+        UserController userController3;
+
+        TCPClient client3;
+        try {
+
+
+            client3 = new TCPClient(InetAddress.getLocalHost(), Constants.SERVER_PORT);
+
+            Thread clientThread = new Thread(client3);
+            clientThread.start();
+
+            Thread.sleep(1000);
+
+            //UserDao userDao = new UserDaoImpl(myDB);
+            userRepository3 = new UserRepositoryImpl(userDao3);
+            userService3 = new UserServiceImpl(userRepository3, client3.getSocket());
+            userServicee3 = new UserServiceeImpl(userRepository3, client3.getSocket());
+            userController3 = new UserController(userService3, userServicee3);
+
+            new Thread(() -> {
+                try {
+                    userController3.listenServer();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }).start();
+
+            userController3.registerr("mortalh4", "pass123");
+
+            userController3.loginn("mortalh4", "pass123");
+
+
+
+
+
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
+
         try {
             Thread.sleep(10000);
         } catch (InterruptedException e) {
@@ -145,11 +189,12 @@ public class ApplicationManager {
             String imageName = "glew_logo";
             String imagePath = "src/assets/glew_logo.png";
 
-            userController.postImagee(imageName, imagePath, new ArrayList<>(List.of("ALL")));
+            userController.postImagee(imageName, imagePath, new ArrayList<>(List.of("xenia")));
 
             Thread.sleep(8000);
 
             userController2.downloadImage(imageName);
+            userController3.downloadImage(imageName);
 
         } catch (InterruptedException e) {
             throw new RuntimeException(e);

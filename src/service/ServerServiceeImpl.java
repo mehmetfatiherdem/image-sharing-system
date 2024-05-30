@@ -302,7 +302,7 @@ public class ServerServiceeImpl implements ServerServicee, Runnable{
                             var userDTO = serverRepository.getUserWithUsername(acc);
                             if (userDTO != null) {
                                 pubKeysResponse.put(acc,
-                                        Confidentiality.encodeByteKeyToStringBase64(Authentication.sign(userDTO.getCertificate().getCertificateCredentials().getPublicKey().getEncoded(), serverRepository.getPrivateKey())));
+                                        Confidentiality.encodeByteKeyToStringBase64(userDTO.getCertificate().getCertificateCredentials().getPublicKey().getEncoded()));
                             } else {
                                 System.out.println("[server] user: " + acc + "in the access list not found");
 
@@ -375,17 +375,20 @@ public class ServerServiceeImpl implements ServerServicee, Runnable{
 
                 // send notification to all online users
 
-                for (var handler : Server.getClientHandlers()) {
-                    new Thread(() -> {
-                        handler.sendNotification(messageKeyValues);
-                    }).start();
+                if (messageKeyValues.get("all") != null) {
+                    for (var handler : Server.getClientHandlers()) {
+                        new Thread(() -> {
+                            handler.sendNotification(messageKeyValues);
+                        }).start();
+                    }
                 }
+
 
             } else if (messageKeyValues.get("message").equals("SESSION_NOTIFICATION")) {
 
                 var sessionID = Confidentiality.decryptWithPrivateKey(Confidentiality.decodeStringKeyToByteBase64(messageKeyValues.get("sessionID")),
                         serverRepository.getPrivateKey());
-                System.out.println("[server] post image arrived session id: " + Arrays.toString(sessionID));
+                System.out.println("[server] post image arrived NOTIFICATION session id: " + Arrays.toString(sessionID));
 
                 var user = serverRepository.getUserWithIP(messageKeyValues.get("ip"));
                 var session = user.getSession();
@@ -440,7 +443,7 @@ public class ServerServiceeImpl implements ServerServicee, Runnable{
 
                             var sessionID = Confidentiality.decryptWithPrivateKey(Confidentiality.decodeStringKeyToByteBase64(messageKeyValues.get("sessionID")),
                                     serverRepository.getPrivateKey());
-                            System.out.println("[server] post image arrived session id: " + Arrays.toString(sessionID));
+                            System.out.println("[server] post image arrived DOWNLOAD session id: " + Arrays.toString(sessionID));
 
                             var session = user.getSession();
 

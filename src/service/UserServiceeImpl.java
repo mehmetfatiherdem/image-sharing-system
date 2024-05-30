@@ -538,7 +538,7 @@ public class UserServiceeImpl implements UserServicee {
     public void extractImage (Map<String, String> messageKeyValues) {
         System.out.println("[client] extracting image");
         try {
-            if (messageKeyValues.get("access").equals("All")) {
+            if (messageKeyValues.get("access").equals("All") || messageKeyValues.get("access").equals(userRepository.getInMemoryUserWithIP(IP).get().getUsername())) {
                 System.out.println("[client] image accessible to all");
 
                 var decryptedAesKey = Confidentiality.decryptWithPrivateKey(Confidentiality.decodeStringKeyToByteBase64(messageKeyValues.get("encryptedAESKey")),
@@ -566,7 +566,7 @@ public class UserServiceeImpl implements UserServicee {
                     File outputDir = new File("src/downloads");
 
                     // Write the BufferedImage to a file in the src/downloads directory
-                    File outputFile = new File(outputDir, messageKeyValues.get("imageName") + ".png");
+                    File outputFile = new File(outputDir, messageKeyValues.get("imageName") + "_" + userRepository.getUserStorageWithIP(IP).getUserName() + "_" + ".png");
                     try {
                         ImageIO.write(bufferedImage, "png", outputFile);
                         System.out.println("[client] " + IP  + " image saved to downloads folder as png in " + outputFile.getAbsolutePath());
@@ -581,7 +581,7 @@ public class UserServiceeImpl implements UserServicee {
 
 
             } else {
-                System.out.println("[client] image accessible to: " + messageKeyValues.get("access"));
+                System.out.println("[client] " + IP + " image not accessible to you");
             }
         } catch (Exception e) {
             e.printStackTrace();
