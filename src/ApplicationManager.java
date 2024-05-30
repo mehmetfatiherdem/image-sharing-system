@@ -84,6 +84,7 @@ public class ApplicationManager {
             String imagePath = "src/assets/glew_logo.png";
 
             userController.postImagee(imageName, imagePath, new ArrayList<>(List.of("ALL")));
+            Thread.sleep(1000);
             userController.downloadImage(imageName);
 
 

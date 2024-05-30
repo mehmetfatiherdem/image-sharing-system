@@ -103,7 +103,7 @@ public class ServerServiceImpl implements ServerService, Runnable {
                                 System.out.println("[server] Nonce added to list: " + messageKeyValues.get("nonce"));
                                 System.out.println("[server] ip: " + messageKeyValues.get("ip"));
 
-                                ;
+
 
                                 String publicKeyMessage = Message.formatMessage("PUBLICKEY",new HashMap<>(){{
                                     put("publicKey", Confidentiality.encodeByteKeyToStringBase64(serverRepository.getPublicKey().getEncoded()));
@@ -303,8 +303,9 @@ public class ServerServiceImpl implements ServerService, Runnable {
                                 put("all", Confidentiality.encodeByteKeyToStringBase64(serverRepository.getPublicKey().getEncoded()));
 
                             }}));
-
+ /*
                             while (true) {
+
                                 String imageMessage = in.readUTF();
                                 var imageMessageKeyValues = Message.getKeyValuePairs(imageMessage);
 
@@ -346,20 +347,27 @@ public class ServerServiceImpl implements ServerService, Runnable {
                                     // send notification to all online users
 
                                     for (var handler: Server.getNotificationHandlers()) {
-                                        handler.sendNotification(imageMessage);
+                                        //handler.sendNotification(imageMessage);
                                     }
 
 
 
 
 
+
+
+
+
                                     break;
+
+
+
                                 } else {
                                     System.out.println("Invalid message");
 
                                 }
                             }
-
+ */
                         } else {
                             var list = Message.parseArrayString(messageKeyValues.get("accessList"));
                             var pubKeysResponse = new HashMap<String, String>();

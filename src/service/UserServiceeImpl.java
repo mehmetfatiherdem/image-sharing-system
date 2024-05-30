@@ -194,9 +194,13 @@ public class UserServiceeImpl implements UserServicee {
                 System.out.println("[client] session not found or timed out notification");
 
             } else if (messageKeyValues.get("message").equals("NEW_IMAGE")) {
-                System.out.println("[client] new image notification: " + messageKeyValues.get("imageName") + " from " + messageKeyValues.get("owner"));
+                System.out.println("[client] ip: " + IP + " new image notification: " + messageKeyValues.get("imageName") + " from " + messageKeyValues.get("owner"));
 
-            } else {
+            } else if (messageKeyValues.get("message").equals("DOWNLOAD_IMAGE")) {
+
+                extractImage(messageKeyValues);
+            }
+            else {
                 System.out.println("[client] unknown message from server");
             }
 
@@ -462,13 +466,16 @@ public class UserServiceeImpl implements UserServicee {
                     put("iv", Confidentiality.encodeByteKeyToStringBase64(iv));
                     put("sessionID", Confidentiality.encodeByteKeyToStringBase64(encryptedSessionID));
                     put("mac", Confidentiality.encodeByteKeyToStringBase64(hmacGlobal));
+                    put("ip", IP);
                 }};
 
                 for (var kV : accessListPublicKeys.entrySet()) {
 
-
-                    msg.put(kV.getKey(), Confidentiality.encodeByteKeyToStringBase64(Confidentiality.encryptWithPublicKey(aesKey.getEncoded(),
-                            Confidentiality.getPublicKeyFromByteArray(Confidentiality.decodeStringKeyToByteBase64(kV.getValue())))));
+                    byte[] kvByte = Confidentiality.decodeStringKeyToByteBase64(kV.getValue());
+                    PublicKey publicKey = Confidentiality.getPublicKeyFromByteArray(kvByte);
+                    byte[] encryptedAesKey = Confidentiality.encryptWithPublicKey(aesKey.getEncoded(), publicKey);
+                    String aesEnc = Confidentiality.encodeByteKeyToStringBase64(encryptedAesKey);
+                    msg.put(kV.getKey(), aesEnc);
                 }
 
                 String message = Message.formatMessage("POST_IMAGE", msg);
@@ -501,6 +508,20 @@ public class UserServiceeImpl implements UserServicee {
                     }});
             out.writeUTF(downloadMessage);
 
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void extractImage (Map<String, String> messageKeyValues) {
+        System.out.println("[client] extracting image");
+        try {
+            if (messageKeyValues.get("access").equals("All")) {
+                System.out.println("[client] image accessible to all");
+            } else {
+                System.out.println("[client] image accessible to: " + messageKeyValues.get("access"));
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }

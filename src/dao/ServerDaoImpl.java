@@ -2,6 +2,7 @@ package dao;
 
 import dto.UserDTO;
 import helper.image.ImageDownloadData;
+import helper.image.ImageMetaData;
 import helper.security.Confidentiality;
 import model.Certificate;
 import serverlocal.ServerStorage;
@@ -10,6 +11,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class ServerDaoImpl implements ServerDao{
@@ -21,14 +23,18 @@ public class ServerDaoImpl implements ServerDao{
     }
 
     @Override
-    public void saveImage(String ownerName, ImageDownloadData imageDownloadData) {
-        serverStorage.addImage(ownerName, imageDownloadData);
+    public void saveImage(ImageMetaData metaData, ImageDownloadData imageDownloadData) {
+        serverStorage.addImage(metaData, imageDownloadData);
     }
-
     @Override
-    public ImageDownloadData getImageByName(String imageName) {
-        var images = serverStorage.getImages();
-        return images.get(imageName);
+    public Map<ImageMetaData, ImageDownloadData> getImageByName(String imageName) {
+        Map<ImageMetaData, ImageDownloadData> images = new HashMap<>();
+        for (var entry : serverStorage.getImages().entrySet()) {
+            if (entry.getValue().getImageName().equals(imageName)) {
+                images.put(entry.getKey(), entry.getValue());
+            }
+        }
+        return images;
     }
 
     public void saveCertificate(Certificate certificate, String ip) {

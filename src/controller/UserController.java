@@ -59,6 +59,6 @@ public class UserController {
     }
 
     public void downloadImage(String imageName) {
-        userService.downloadImage(imageName);
+        userServicee.downloadImage(imageName);
     }
 }

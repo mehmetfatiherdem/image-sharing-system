@@ -117,9 +117,6 @@ public class Server implements Runnable{
     public static Set<ServerServiceeImpl> getClientHandlers() {
         return clientHandlers;
     }
-    public static Set<NotificationServiceImpl> getNotificationHandlers() {
-        return notificationHandlers;
-    }
 
     // remove this
     public KeyPair getKeyPair() {

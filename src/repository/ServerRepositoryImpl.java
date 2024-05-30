@@ -3,11 +3,13 @@ package repository;
 import dao.ServerDao;
 import dto.UserDTO;
 import helper.image.ImageDownloadData;
+import helper.image.ImageMetaData;
 import model.Certificate;
 
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class ServerRepositoryImpl implements ServerRepository{
@@ -18,14 +20,13 @@ public class ServerRepositoryImpl implements ServerRepository{
     }
 
     @Override
-    public void saveImage(String ownerName, ImageDownloadData imageDownloadData) {
-        serverDao.saveImage(ownerName, imageDownloadData);
+    public void saveImage(ImageMetaData metaData, ImageDownloadData imageDownloadData) {
+        serverDao.saveImage(metaData, imageDownloadData);
     }
     @Override
-    public ImageDownloadData getImageByName(String imageName) {
+    public Map<ImageMetaData, ImageDownloadData> getImageByName(String imageName) {
         return serverDao.getImageByName(imageName);
     }
-
     public void addCertificate(Certificate certificate, String ip) {
         serverDao.saveCertificate(certificate, ip);
     }

@@ -7,14 +7,16 @@ public class ImageDownloadData {
     private String imageName;
     private byte[] encryptedImage;
     private byte[] digitalSignature;
+    private byte[] iv;
     private HashMap<String, byte[]> encryptedAESKeys = new HashMap<>();
     private byte[] certificatePublicKey;
 
-    public ImageDownloadData(String imageName, byte[] encryptedImage, byte[] digitalSignature, byte[] certificatePublicKey) {
+    public ImageDownloadData(String imageName, byte[] encryptedImage, byte[] digitalSignature, byte[] certificatePublicKey, byte[] iv) {
         this.imageName = imageName;
         this.encryptedImage = encryptedImage;
         this.digitalSignature = digitalSignature;
         this.certificatePublicKey = certificatePublicKey;
+        this.iv = iv;
     }
 
     // Getters setters
@@ -51,5 +53,11 @@ public class ImageDownloadData {
     }
     public void setImageName(String imageName) {
         this.imageName = imageName;
+    }
+    public byte[] getIv() {
+        return iv;
+    }
+    public void setIv(byte[] iv) {
+        this.iv = iv;
     }
 }

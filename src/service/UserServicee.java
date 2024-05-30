@@ -12,4 +12,5 @@ public interface UserServicee {
     void register(String username, String password);
     void postImage(String imageName, String imagePath, List<String> accessList);
     void downloadImage(String imageName);
+    void extractImage(Map<String, String> messageKeyValues);
 }
