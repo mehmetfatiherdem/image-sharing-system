@@ -29,9 +29,11 @@ public class ApplicationManager {
     }
 
     public void run() {
-
+        /*
         MyDB myDB = MyDB.getInstance();
         myDB.connect();
+
+         */
 
         Server server;
 
@@ -43,6 +45,8 @@ public class ApplicationManager {
         }
 
         server.fireUp();
+
+        /*
 
         try {
             Thread.sleep(1000);
@@ -199,6 +203,8 @@ public class ApplicationManager {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+
+         */
 
 
     }

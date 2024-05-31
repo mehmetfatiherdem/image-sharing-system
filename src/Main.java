@@ -1,7 +1,9 @@
+import frontend.MyHTTPServer;
 import helper.security.Authentication;
 import helper.security.Confidentiality;
 import model.Server;
 
+import java.io.IOException;
 import java.net.BindException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
@@ -9,7 +11,17 @@ import java.util.Arrays;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-      ApplicationManager.getInstance().run();
+
+        new Thread(() -> {
+            try {
+                MyHTTPServer.startHttpServer();
+            } catch (IOException e) {
+                e.printStackTrace();
+                System.out.println("Error starting HTTP Server");
+            }
+        }).start();
+
+        ApplicationManager.getInstance().run();
 
     /*
         Server server = Server.getInstance(1233);
