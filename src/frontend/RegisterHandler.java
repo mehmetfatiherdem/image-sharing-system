@@ -25,16 +25,14 @@ import java.nio.file.Paths;
 
 public class RegisterHandler implements HttpHandler {
 
-    private LoginHandler loginHandler;
-    private MyDB myDB;
+    private UserController userController;
 
     public RegisterHandler() {
 
     }
 
-    public RegisterHandler(LoginHandler loginHandler, MyDB myDB) {
-        this.loginHandler = loginHandler;
-        this.myDB = myDB;
+    public RegisterHandler(UserController userController) {
+        this.userController = userController;
     }
 
     @Override
@@ -56,40 +54,8 @@ public class RegisterHandler implements HttpHandler {
             System.out.println("Username: " + username);
             System.out.println("Password: " + password);
 
-            UserDao userDao = new UserDaoImpl(myDB);
-            UserRepository userRepository;
-            UserService userService;
-            UserServicee userServicee;
-            UserController userController;
-            TCPClient client;
-            try {
-                client = new TCPClient(InetAddress.getLocalHost(), Constants.SERVER_PORT);
 
-                Thread clientThread = new Thread(client);
-                clientThread.start();
-
-                Thread.sleep(1000);
-
-                //UserDao userDao = new UserDaoImpl(myDB);
-                userRepository = new UserRepositoryImpl(userDao);
-                userService = new UserServiceImpl(userRepository, client.getSocket());
-                userServicee = new UserServiceeImpl(userRepository, client.getSocket());
-                userController = new UserController(userService, userServicee);
-
-                new Thread(() -> {
-                    try {
-                        userController.listenServer();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }).start();
-
-                userController.registerr(username, password);
-
-                loginHandler.setUserController(userController);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            userController.registerr(username, password);
 
 
             // Redirect to login page
@@ -105,13 +71,5 @@ public class RegisterHandler implements HttpHandler {
             os.close();
         }
 
-    }
-
-    public void setLoginHandler(LoginHandler loginHandler) {
-        this.loginHandler = loginHandler;
-    }
-
-    public LoginHandler getLoginHandler() {
-        return loginHandler;
     }
 }

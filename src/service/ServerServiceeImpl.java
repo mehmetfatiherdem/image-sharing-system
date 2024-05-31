@@ -7,6 +7,7 @@ import helper.image.ImageMetaData;
 import helper.security.Authentication;
 import helper.security.Confidentiality;
 import helper.security.UserCertificateCredentials;
+import logger.MyLogger;
 import model.Certificate;
 import model.Server;
 import model.Session;
@@ -58,6 +59,9 @@ public class ServerServiceeImpl implements ServerServicee, Runnable{
 
             while (true) {
                 String message = in.readUTF();
+
+                MyLogger.log("[server] message received: " + message);
+
                 var messageKeyValues = Message.getKeyValuePairs(message);
 
                 handleClientMessage(messageKeyValues);
@@ -109,6 +113,8 @@ public class ServerServiceeImpl implements ServerServicee, Runnable{
                     System.out.println("[server] public key in bytes: " + Arrays.toString(serverRepository.getPublicKey().getEncoded()));
 
                     out.writeUTF(publicKeyMessage);
+
+                    MyLogger.log("[server] public key sent to client");
                 }
             } else if (messageKeyValues.get("message").equals("MAC")) {
                 var mac = Confidentiality.decryptWithPrivateKey(Confidentiality.decodeStringKeyToByteBase64(messageKeyValues.get("macKey")),
@@ -127,16 +133,42 @@ public class ServerServiceeImpl implements ServerServicee, Runnable{
 
                 user.setMAC(MAC);
 
-                out.writeUTF(Message.formatMessage("MAC_RECEIVED", new HashMap<>() {{
+                String m = Message.formatMessage("MAC_RECEIVED", new HashMap<>() {{
                     put("ip", messageKeyValues.get("ip"));
                     put("mac", Confidentiality.encodeByteKeyToStringBase64(MAC));
-                }}));
+                }});
+
+                out.writeUTF(m);
+
+                MyLogger.log("[server] MAC received");
 
 
             } else if (messageKeyValues.get("message").equals("REGISTER")) {
                 // check MAC to see integrity and authentication
                 if (Arrays.equals(serverRepository.getUserWithIP(messageKeyValues.get("ip")).getMAC(), Confidentiality.decodeStringKeyToByteBase64(messageKeyValues.get("mac")))) {
                     System.out.println("MAC verified");
+
+                    // get all users from db and check if the username is already taken
+
+                    for (var user : serverRepository.getUsers()) {
+
+                        if (user.getUsername() == null) {
+                            continue;
+                        }
+
+                        if (user.getUsername().equals(messageKeyValues.get("username"))) {
+                            System.out.println("[server] Username already taken");
+                            String m = Message.formatMessage("USERNAME_TAKEN", new HashMap<>() {{
+                                put("ip", messageKeyValues.get("ip"));
+                            }});
+
+                            out.writeUTF(m);
+
+                            MyLogger.log("[server] " + m);
+
+                            return;
+                        }
+                    }
 
                     var retrievedIV = Confidentiality.decryptWithPrivateKey(Confidentiality.decodeStringKeyToByteBase64(messageKeyValues.get("iv")),
                             serverRepository.getPrivateKey());
@@ -151,6 +183,10 @@ public class ServerServiceeImpl implements ServerServicee, Runnable{
                     System.out.println("[server] Password received: " + Arrays.toString(retrievedPassword));
 
                     var hashedPassword = Authentication.hashPassword(Arrays.toString(retrievedPassword), retrievedSalt);
+
+
+
+
 
                     var user = serverRepository.getUserWithIP(messageKeyValues.get("ip"));
 
@@ -184,6 +220,8 @@ public class ServerServiceeImpl implements ServerServicee, Runnable{
 
 
                     out.writeUTF(certificateMsg);
+
+                    MyLogger.log("[server] " + certificateMsg);
 
                     var _u = serverRepository.getUserWithUsername(messageKeyValues.get("username"));
 
@@ -241,6 +279,8 @@ public class ServerServiceeImpl implements ServerServicee, Runnable{
 
                         out.writeUTF(loginMsg);
 
+                        MyLogger.log("[server] " + loginMsg);
+
                     } else {
                         System.out.println("[server] Passwords do not match");
 
@@ -251,6 +291,8 @@ public class ServerServiceeImpl implements ServerServicee, Runnable{
 
 
                         out.writeUTF(loginMsg);
+
+                        MyLogger.log("[server] " + loginMsg);
                     }
 
                 } else {
@@ -271,29 +313,43 @@ public class ServerServiceeImpl implements ServerServicee, Runnable{
 
                     if (user.getSession() == null) {
                         System.out.println("[server] userIP: " + messageKeyValues.get("ip") + " not authenticated");
-                        out.writeUTF(Message.formatMessage("SESSION_NOT_FOUND", new HashMap<>() {{
+
+                        String m = Message.formatMessage("SESSION_NOT_FOUND", new HashMap<>() {{
                             put("ip", messageKeyValues.get("ip"));
-                        }}));
+                        }});
+
+                        out.writeUTF(m);
+
+                        MyLogger.log("[server] " + m);
 
                     }
 
                     if (session.isTimedOut()) {
                         System.out.println("[server] session for userIP: " + messageKeyValues.get("ip") + " is timed out");
                         user.setSession(null);
-                        out.writeUTF(Message.formatMessage("SESSION_TIME_OUT", new HashMap<>() {{
+
+                        String m = Message.formatMessage("SESSION_TIME_OUT", new HashMap<>() {{
                             put("ip", messageKeyValues.get("ip"));
-                        }}));
+                        }});
+
+                        out.writeUTF(m);
+
+                        MyLogger.log("[server] " + m);
                     }
 
                     session.updateLastAccess();
 
                     if (messageKeyValues.get("accessList").equals("[ALL]")) {
-                        out.writeUTF(Message.formatMessage("SESSION_VALID", new HashMap<>() {{
+
+                        String m = Message.formatMessage("SESSION_VALID", new HashMap<>() {{
                             put("ip", messageKeyValues.get("ip"));
                             put("all", Confidentiality.encodeByteKeyToStringBase64(serverRepository.getPublicKey().getEncoded()));
 
-                        }}));
+                        }});
 
+                        out.writeUTF(m);
+
+                        MyLogger.log("[server] " + m);
 
                     } else {
                         var list = Message.parseArrayString(messageKeyValues.get("accessList"));
@@ -311,7 +367,11 @@ public class ServerServiceeImpl implements ServerServicee, Runnable{
 
                         pubKeysResponse.put("ip", messageKeyValues.get("ip"));
 
-                        out.writeUTF(Message.formatMessage("SESSION_VALID", pubKeysResponse));
+                        String m = Message.formatMessage("SESSION_VALID", pubKeysResponse);
+
+                        out.writeUTF(m);
+
+                        MyLogger.log("[server] " + m);
 
 
                     }
@@ -322,100 +382,123 @@ public class ServerServiceeImpl implements ServerServicee, Runnable{
                 }
             } else if (messageKeyValues.get("message").equals("POST_IMAGE")) {
 
-                for (var msg : messageKeyValues.entrySet()) {
-                    System.out.println("[server] key: " + msg.getKey() + " value: " + msg.getValue());
-                }
-
-                var user = serverRepository.getUserWithIP(messageKeyValues.get("ip"));
+                if (Arrays.equals(serverRepository.getUserWithIP(messageKeyValues.get("ip")).getMAC(), Confidentiality.decodeStringKeyToByteBase64(messageKeyValues.get("mac")))) {
+                    System.out.println("MAC verified");
 
 
-                var imageDownloadData = new ImageDownloadData(
-                        messageKeyValues.get("imageName"),
-                        Confidentiality.decodeStringKeyToByteBase64(messageKeyValues.get("imageBytes")),
-                        Confidentiality.decodeStringKeyToByteBase64(messageKeyValues.get("digitalSignature")),
-                        user.getPublicKey().getEncoded(),
-                        Confidentiality.decodeStringKeyToByteBase64(messageKeyValues.get("iv"))
-                );
+                    for (var msg : messageKeyValues.entrySet()) {
+                        System.out.println("[server] key: " + msg.getKey() + " value: " + msg.getValue());
+                    }
 
-                var imageMetaData = new ImageMetaData();
+                    var user = serverRepository.getUserWithIP(messageKeyValues.get("ip"));
 
-                for (var msg : messageKeyValues.entrySet()) {
-                    if (!msg.getKey().equals("message") && !msg.getKey().equals("imageName") &&
-                            !msg.getKey().equals("imageBytes") && !msg.getKey().equals("digitalSignature") &&
-                            !msg.getKey().equals("iv") && !msg.getKey().equals("sessionID") && !msg.getKey().equals("mac")
-                            && !msg.getKey().equals("ip")) {
 
-                        if (msg.getKey().equals("all")) {
-                            var decryptedAESKey = Confidentiality.decryptWithPrivateKey(Confidentiality.decodeStringKeyToByteBase64(msg.getValue()),
-                                    serverRepository.getPrivateKey());
-                            imageDownloadData.addEncryptedAESKey(msg.getKey(), decryptedAESKey);
-                            imageMetaData.addToAccessList(msg.getKey());
-                        } else {
-                            imageDownloadData.addEncryptedAESKey(msg.getKey(),
-                                    Confidentiality.decodeStringKeyToByteBase64(msg.getValue()));
-                            imageMetaData.addToAccessList(msg.getKey());
+                    var imageDownloadData = new ImageDownloadData(
+                            messageKeyValues.get("imageName"),
+                            Confidentiality.decodeStringKeyToByteBase64(messageKeyValues.get("imageBytes")),
+                            Confidentiality.decodeStringKeyToByteBase64(messageKeyValues.get("digitalSignature")),
+                            user.getPublicKey().getEncoded(),
+                            Confidentiality.decodeStringKeyToByteBase64(messageKeyValues.get("iv"))
+                    );
+
+                    var imageMetaData = new ImageMetaData();
+
+                    for (var msg : messageKeyValues.entrySet()) {
+                        if (!msg.getKey().equals("message") && !msg.getKey().equals("imageName") &&
+                                !msg.getKey().equals("imageBytes") && !msg.getKey().equals("digitalSignature") &&
+                                !msg.getKey().equals("iv") && !msg.getKey().equals("sessionID") && !msg.getKey().equals("mac")
+                                && !msg.getKey().equals("ip")) {
+
+                            if (msg.getKey().equals("all")) {
+                                var decryptedAESKey = Confidentiality.decryptWithPrivateKey(Confidentiality.decodeStringKeyToByteBase64(msg.getValue()),
+                                        serverRepository.getPrivateKey());
+                                imageDownloadData.addEncryptedAESKey(msg.getKey(), decryptedAESKey);
+                                imageMetaData.addToAccessList(msg.getKey());
+                            } else {
+                                imageDownloadData.addEncryptedAESKey(msg.getKey(),
+                                        Confidentiality.decodeStringKeyToByteBase64(msg.getValue()));
+                                imageMetaData.addToAccessList(msg.getKey());
+                            }
+
+
                         }
-
-
                     }
-                }
 
-                System.out.println("******************");
-                System.out.println("[server]access list image data save val");
+                    System.out.println("******************");
+                    System.out.println("[server]access list image data save val");
 
-                imageMetaData.setOwnerName(user.getUsername());
+                    imageMetaData.setOwnerName(user.getUsername());
 
-                for (var msg : imageDownloadData.getAesKeys().entrySet()) {
-                    System.out.println("[server] key: " + msg.getKey() + " value: " + Arrays.toString(msg.getValue()));
-                }
-
-                System.out.println("******************");
-
-                serverRepository.saveImage(imageMetaData, imageDownloadData);
-
-                // send notification to all online users
-
-                if (messageKeyValues.get("all") != null) {
-                    for (var handler : Server.getClientHandlers()) {
-                        new Thread(() -> {
-                            handler.sendNotification(messageKeyValues);
-                        }).start();
+                    for (var msg : imageDownloadData.getAesKeys().entrySet()) {
+                        System.out.println("[server] key: " + msg.getKey() + " value: " + Arrays.toString(msg.getValue()));
                     }
+
+                    System.out.println("******************");
+
+                    serverRepository.saveImage(imageMetaData, imageDownloadData);
+
+                    // send notification to all online users
+
+                    if (messageKeyValues.get("all") != null) {
+                        for (var handler : Server.getClientHandlers()) {
+                            new Thread(() -> {
+                                handler.sendNotification(messageKeyValues);
+                            }).start();
+                        }
+                    }
+                } else {
+                    System.out.println("MAC not verified");
                 }
 
 
             } else if (messageKeyValues.get("message").equals("SESSION_NOTIFICATION")) {
 
-                var sessionID = Confidentiality.decryptWithPrivateKey(Confidentiality.decodeStringKeyToByteBase64(messageKeyValues.get("sessionID")),
-                        serverRepository.getPrivateKey());
-                System.out.println("[server] post image arrived NOTIFICATION session id: " + Arrays.toString(sessionID));
+                if (Arrays.equals(serverRepository.getUserWithIP(messageKeyValues.get("ip")).getMAC(), Confidentiality.decodeStringKeyToByteBase64(messageKeyValues.get("mac")))) {
+                    System.out.println("MAC verified");
 
-                var user = serverRepository.getUserWithIP(messageKeyValues.get("ip"));
-                var session = user.getSession();
+                    var sessionID = Confidentiality.decryptWithPrivateKey(Confidentiality.decodeStringKeyToByteBase64(messageKeyValues.get("sessionID")),
+                            serverRepository.getPrivateKey());
+                    System.out.println("[server] post image arrived NOTIFICATION session id: " + Arrays.toString(sessionID));
 
-                if (user.getSession() == null) {
-                    System.out.println("[server] userIP: " + messageKeyValues.get("ip") + " not authenticated");
-                    out.writeUTF(Message.formatMessage("SESSION_NOT_FOUND_NOTIFICATION", new HashMap<>() {{
-                        put("ip", messageKeyValues.get("ip"));
-                    }}));
-                }
+                    var user = serverRepository.getUserWithIP(messageKeyValues.get("ip"));
+                    var session = user.getSession();
 
-                if (session.isTimedOut()) {
-                    System.out.println("[server] session for userIP: " + messageKeyValues.get("ip") + " is timed out");
-                    user.setSession(null);
-                    out.writeUTF(Message.formatMessage("SESSION_TIME_OUT_NOTIFICATION", new HashMap<>() {{
-                        put("ip", messageKeyValues.get("ip"));
-                    }}));
-                }
+                    if (user.getSession() == null) {
+                        System.out.println("[server] userIP: " + messageKeyValues.get("ip") + " not authenticated");
 
-                session.updateLastAccess();
+                        String m = Message.formatMessage("SESSION_NOT_FOUND_NOTIFICATION", new HashMap<>() {{
+                            put("ip", messageKeyValues.get("ip"));
+                        }});
 
-                sendNotificationLock.lock();
-                try {
-                    sendNotificationContinue = true;
-                    sendNotificationCondition.signal();
-                } finally {
-                    sendNotificationLock.unlock();
+                        out.writeUTF(m);
+
+                        MyLogger.log("[server] " + m);
+                    }
+
+                    if (session.isTimedOut()) {
+                        System.out.println("[server] session for userIP: " + messageKeyValues.get("ip") + " is timed out");
+                        user.setSession(null);
+
+                        String m = Message.formatMessage("SESSION_TIME_OUT_NOTIFICATION", new HashMap<>() {{
+                            put("ip", messageKeyValues.get("ip"));
+                        }});
+
+                        out.writeUTF(m);
+
+                        MyLogger.log("[server] " + m);
+                    }
+
+                    session.updateLastAccess();
+
+                    sendNotificationLock.lock();
+                    try {
+                        sendNotificationContinue = true;
+                        sendNotificationCondition.signal();
+                    } finally {
+                        sendNotificationLock.unlock();
+                    }
+                } else {
+                    System.out.println("MAC not verified");
                 }
 
 
@@ -427,17 +510,28 @@ public class ServerServiceeImpl implements ServerServicee, Runnable{
 
                     if (user == null) {
                         System.out.println("[server] user not found");
-                        out.writeUTF(Message.formatMessage("USER_NOT_FOUND", new HashMap<>() {{
+
+                        String m = Message.formatMessage("USER_NOT_FOUND", new HashMap<>() {{
                             put("ip", messageKeyValues.get("ip"));
-                        }}));
+                        }});
+
+                        out.writeUTF(m);
+
+                        MyLogger.log("[server] " + m);
 
                     }
 
                     if (image == null) {
                         System.out.println("[server] Image not found");
-                        out.writeUTF(Message.formatMessage("IMAGE_NOT_FOUND", new HashMap<>() {{
+
+                        String m = Message.formatMessage("IMAGE_NOT_FOUND", new HashMap<>() {{
                             put("ip", messageKeyValues.get("ip"));
-                        }}));
+                        }});
+
+                        out.writeUTF(m);
+
+                        MyLogger.log("[server] " + m);
+
                     } else {
                             System.out.println("[server] Image found");
 
@@ -449,17 +543,27 @@ public class ServerServiceeImpl implements ServerServicee, Runnable{
 
                             if (session == null) {
                                 System.out.println("[server] userIP: " + messageKeyValues.get("ip") + " not authenticated");
-                                out.writeUTF(Message.formatMessage("SESSION_NOT_FOUND_DOWNLOAD", new HashMap<>() {{
+
+                                String m = Message.formatMessage("SESSION_NOT_FOUND_DOWNLOAD", new HashMap<>() {{
                                     put("ip", messageKeyValues.get("ip"));
-                                }}));
+                                }});
+
+                                out.writeUTF(m);
+
+                                MyLogger.log("[server] " + m);
                             }
 
                             if (session.isTimedOut()) {
                                 System.out.println("[server] session for userIP: " + messageKeyValues.get("ip") + " is timed out");
                                 user.setSession(null);
-                                out.writeUTF(Message.formatMessage("SESSION_TIME_OUT_DOWNLOAD", new HashMap<>() {{
+
+                                String m  =Message.formatMessage("SESSION_TIME_OUT_DOWNLOAD", new HashMap<>() {{
                                     put("ip", messageKeyValues.get("ip"));
-                                }}));
+                                }});
+
+                                out.writeUTF(m);
+
+                                MyLogger.log("[server] " + m);
                             }
 
                             session.updateLastAccess();
@@ -488,6 +592,8 @@ public class ServerServiceeImpl implements ServerServicee, Runnable{
 
                                     out.writeUTF(downloadMessage);
 
+                                    MyLogger.log("[server] " + downloadMessage);
+
                                } else if (img.getKey().getAccessList().contains(user.getUsername())) {
 
                                     var encryptedAESKey = img.getValue().getAesKeys().get(user.getUsername());
@@ -503,11 +609,17 @@ public class ServerServiceeImpl implements ServerServicee, Runnable{
                                     }});
 
                                     out.writeUTF(downloadMessage);
+
+                                    MyLogger.log("[server] " + downloadMessage);
                                 } else {
                                     System.out.println("[server] user: " + user.getUsername() + " not in the access list of the image: " + img.getValue().getImageName());
-                                    out.writeUTF(Message.formatMessage("ACCESS_DENIED", new HashMap<>() {{
+                                    String m = Message.formatMessage("ACCESS_DENIED", new HashMap<>() {{
                                         put("ip", messageKeyValues.get("ip"));
-                                    }}));
+                                    }});
+
+                                    out.writeUTF(m);
+
+                                    MyLogger.log("[server] " + m);
                                 }
 
 
@@ -540,6 +652,8 @@ public class ServerServiceeImpl implements ServerServicee, Runnable{
 
             out.writeUTF(requestSessionMessage);
 
+            MyLogger.log("[server] " + requestSessionMessage);
+
             sendNotificationLock.lock();
             try {
                 while (!sendNotificationContinue) {
@@ -559,6 +673,8 @@ public class ServerServiceeImpl implements ServerServicee, Runnable{
             }});
 
             out.writeUTF(notificationMessage);
+
+            MyLogger.log("[server] " + notificationMessage);
 
         } catch (Exception e) {
             e.printStackTrace();

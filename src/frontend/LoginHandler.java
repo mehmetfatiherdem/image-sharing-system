@@ -27,10 +27,6 @@ public class LoginHandler implements HttpHandler {
         this.userController = userController;
     }
 
-    public LoginHandler(UploadHandler uploadHandler, DownloadHandler downloadHandler) {
-        this.uploadHandler = uploadHandler;
-        this.downloadHandler = downloadHandler;
-    }
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
@@ -54,8 +50,6 @@ public class LoginHandler implements HttpHandler {
             try {
                 userController.loginn(username, password);
 
-                uploadHandler.setUserController(userController);
-                downloadHandler.setUserController(userController);
             } catch (Exception e) {
                 e.printStackTrace();
             }
