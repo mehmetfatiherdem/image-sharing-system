@@ -6,6 +6,7 @@ import helper.image.ImageFileIO;
 import helper.security.Authentication;
 import helper.security.Confidentiality;
 import helper.security.UserCertificateCredentials;
+import logger.MyLogger;
 import model.Certificate;
 import model.User;
 import repository.UserRepository;
@@ -238,6 +239,7 @@ public class UserServiceeImpl implements UserServicee {
             }});
 
             System.out.println("[client] hello message: " + helloMsg);
+            MyLogger.log("[client] " + IP + " " + helloMsg);
 
             out.writeUTF(helloMsg);
 

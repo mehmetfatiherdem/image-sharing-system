@@ -7,7 +7,18 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 
 public class MyHTTPServer {
-    public static void startHttpServer() throws IOException {
+
+    private HttpServer server;
+
+    public MyHTTPServer() {
+
+    }
+
+    public MyHTTPServer(HttpServer server) {
+        this.server = server;
+    }
+
+    public void startHttpServer() throws IOException {
 
         MyDB myDB = MyDB.getInstance();
         myDB.connect();
@@ -18,7 +29,6 @@ public class MyHTTPServer {
         LoginHandler loginHandler = new LoginHandler(uploadHandler, downloadHandler);
         RegisterHandler registerHandler = new RegisterHandler(loginHandler, myDB);
 
-        HttpServer server = HttpServer.create(new InetSocketAddress(8000), 0);
         server.createContext("/", registerHandler);
         server.createContext("/login", loginHandler);
         server.createContext("/upload", uploadHandler);

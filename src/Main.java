@@ -1,3 +1,4 @@
+import com.sun.net.httpserver.HttpServer;
 import frontend.MyHTTPServer;
 import helper.security.Authentication;
 import helper.security.Confidentiality;
@@ -5,6 +6,7 @@ import model.Server;
 
 import java.io.IOException;
 import java.net.BindException;
+import java.net.InetSocketAddress;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.util.Arrays;
@@ -14,7 +16,31 @@ public class Main {
 
         new Thread(() -> {
             try {
-                MyHTTPServer.startHttpServer();
+                HttpServer server1 = HttpServer.create(new InetSocketAddress(8000), 0);
+                MyHTTPServer myServer1 = new MyHTTPServer(server1);
+                myServer1.startHttpServer();
+            } catch (IOException e) {
+                e.printStackTrace();
+                System.out.println("Error starting HTTP Server");
+            }
+        }).start();
+
+        new Thread(() -> {
+            try {
+                HttpServer server2 = HttpServer.create(new InetSocketAddress(8001), 0);
+                MyHTTPServer myServer2 = new MyHTTPServer(server2);
+                myServer2.startHttpServer();
+            } catch (IOException e) {
+                e.printStackTrace();
+                System.out.println("Error starting HTTP Server");
+            }
+        }).start();
+
+        new Thread(() -> {
+            try {
+                HttpServer server3 = HttpServer.create(new InetSocketAddress(8002), 0);
+                MyHTTPServer myServer3 = new MyHTTPServer(server3);
+                myServer3.startHttpServer();
             } catch (IOException e) {
                 e.printStackTrace();
                 System.out.println("Error starting HTTP Server");

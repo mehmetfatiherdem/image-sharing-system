@@ -34,7 +34,7 @@ public class DownloadHandler implements HttpHandler {
 
             System.out.println("Image Name: " + imageName);
 
-            userController.downloadImage(imageName.toString());
+            userController.downloadImage(imageName.substring(10).toString());
 
 
         } else {
