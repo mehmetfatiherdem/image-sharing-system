@@ -53,7 +53,3 @@
 ### 5. Attacks related to Client Side user-flow
 - An attacker may try to manipulate the client-side user-flow to exploit the system. For example, an attacker may try to manipulate the client-side code to access unauthorized resources.
 
-### Group Members
-- [x] 150119054 - Mehmet Fatih Erdem
-- [x] 150119542 - Obaidah Kalajo
-
