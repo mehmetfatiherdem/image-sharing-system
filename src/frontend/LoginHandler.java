@@ -48,7 +48,7 @@ public class LoginHandler implements HttpHandler {
             System.out.println("Password: " + password);
 
             try {
-                userController.loginn(username, password);
+                userController.login(username, password);
 
             } catch (Exception e) {
                 e.printStackTrace();

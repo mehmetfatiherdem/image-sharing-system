@@ -7,6 +7,9 @@ out/
 
 *.iml
 
+/src/assets/
+/src/downloads/
+
 ### Eclipse ###
 .apt_generated
 .classpath

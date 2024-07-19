@@ -3,7 +3,6 @@ package frontend;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import controller.UserController;
-import helper.format.Message;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -60,7 +59,7 @@ public class UploadHandler implements HttpHandler {
             }
 
 
-            userController.postImagee(imageName, "src/assets/" + imageName, accessList);
+            userController.postImage(imageName, "src/assets/" + imageName, accessList);
 
 
         } else {

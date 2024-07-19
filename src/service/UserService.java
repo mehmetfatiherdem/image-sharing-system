@@ -1,18 +1,16 @@
 package service;
 
-import helper.image.ImageDownloadData;
-import model.Certificate;
-
-import java.security.PublicKey;
 import java.util.List;
+import java.util.Map;
 
 public interface UserService {
+    void listenServer();
+    void handleServerMessage(Map<String, String> messageKeyValues);
+    void sendHelloMessage();
+    void sendMacKey();
     void login(String username, String password);
     void register(String username, String password);
-    void logout();
-    boolean verifyCertificate(Certificate certificate, PublicKey publicKey);
     void postImage(String imageName, String imagePath, List<String> accessList);
     void downloadImage(String imageName);
-    void retrieveImage(ImageDownloadData imageDownloadData);
-    void listenNotifications();
+    void extractImage(Map<String, String> messageKeyValues);
 }

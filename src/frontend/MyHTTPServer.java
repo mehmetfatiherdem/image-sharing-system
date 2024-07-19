@@ -3,11 +3,8 @@ package frontend;
 import com.sun.net.httpserver.HttpServer;
 import controller.UserController;
 import db.MyDB;
-import service.UserService;
-import service.UserServicee;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
 
 public class MyHTTPServer {
 

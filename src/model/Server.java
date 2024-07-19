@@ -8,7 +8,6 @@ import repository.ServerRepositoryImpl;
 import serverlocal.ServerStorage;
 import service.NotificationServiceImpl;
 import service.ServerServiceImpl;
-import service.ServerServiceeImpl;
 
 import java.net.BindException;
 import java.net.ServerSocket;
@@ -30,7 +29,7 @@ public class Server implements Runnable{
     private Socket socket;
     private ServerStorage serverStorage;
     //private static Set<ServerServiceImpl> clientHandlers = ConcurrentHashMap.newKeySet();
-    private static Set<ServerServiceeImpl> clientHandlers = ConcurrentHashMap.newKeySet();
+    private static Set<ServerServiceImpl> clientHandlers = ConcurrentHashMap.newKeySet();
     private static Set<NotificationServiceImpl> notificationHandlers = ConcurrentHashMap.newKeySet();
 
 
@@ -71,7 +70,7 @@ public class Server implements Runnable{
 
                  */
 
-                ServerServiceeImpl serverServicee = new ServerServiceeImpl(serverRepository, socket);
+                ServerServiceImpl serverServicee = new ServerServiceImpl(serverRepository, socket);
 
                 // notificationHandlers.add(notificationService);
                 // clientHandlers.add(serverService);
@@ -114,7 +113,7 @@ public class Server implements Runnable{
     public ServerStorage getServerStorage() {
         return serverStorage;
     }
-    public static Set<ServerServiceeImpl> getClientHandlers() {
+    public static Set<ServerServiceImpl> getClientHandlers() {
         return clientHandlers;
     }
 

@@ -1,16 +1,13 @@
 package service;
 
-import dto.UserDTO;
-import helper.image.ImageDownloadData;
 import helper.security.UserCertificateCredentials;
 
-import java.net.Socket;
-import java.security.PrivateKey;
-import java.util.ArrayList;
+import java.util.Map;
 
 public interface ServerService {
+    void listen();
+    void handleClientMessage(Map<String, String> messageKeyValues);
+    void sendNotification(Map<String, String> messageKeyValues);
     void createCertificate(UserCertificateCredentials userCertificateCredentials, byte[] sign, String ip);
-    void sendImagePostNotification(ArrayList<UserDTO> onlineUsers, String imageName, String ownerUsername);
-    void sendImage(ImageDownloadData imageDownloadData);
-    void handleRequests(Socket socket);
+
 }

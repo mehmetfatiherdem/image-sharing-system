@@ -3,23 +3,11 @@ package frontend;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import controller.UserController;
-import dao.UserDao;
-import dao.UserDaoImpl;
-import db.MyDB;
-import helper.Constants;
-import repository.UserRepository;
-import repository.UserRepositoryImpl;
-import service.UserService;
-import service.UserServiceImpl;
-import service.UserServicee;
-import service.UserServiceeImpl;
-import socket.TCPClient;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.net.InetAddress;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -55,7 +43,7 @@ public class RegisterHandler implements HttpHandler {
             System.out.println("Password: " + password);
 
 
-            userController.registerr(username, password);
+            userController.register(username, password);
 
 
             // Redirect to login page
