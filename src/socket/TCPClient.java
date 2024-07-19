@@ -25,14 +25,6 @@ public class TCPClient implements Runnable{
     }
 
     // Getters
-    public InetAddress getServerAddress() {
-        return serverAddress;
-    }
-
-    public int getServerPort() {
-        return serverPort;
-    }
-
     public Socket getSocket() {
         return socket;
     }

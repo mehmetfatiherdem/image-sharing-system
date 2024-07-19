@@ -16,14 +16,14 @@ public class UserController {
     }
 
     public void register(String username, String password) {
-        userService.sendHelloMessage();
-        userService.sendMacKey();
+        //userService.sendHelloMessage();
+        //userService.sendMacKey();
         userService.register(username, password);
     }
 
     public void login(String username, String password) {
-        userService.sendHelloMessage();
-        userService.sendMacKey();
+       // userService.sendHelloMessage();
+        //userService.sendMacKey();
         userService.login(username, password);
     }
 

@@ -247,10 +247,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void sendHelloMessage() {
+    public void sendHelloMessage(DataOutputStream out) {
         try {
-
-            DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
             String nonceClient = Authentication.generateNonce();
 
@@ -280,7 +278,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void sendMacKey() {
+    public void sendMacKey(DataOutputStream out) {
         try {
 
             macLock.lock();
@@ -292,9 +290,6 @@ public class UserServiceImpl implements UserService {
                 macLock.unlock();
             }
 
-
-
-            DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
             // send MAC key to server
             byte[] macKey = Authentication.generateMACKey();
@@ -348,9 +343,11 @@ public class UserServiceImpl implements UserService {
                 return;
             }
 
-            //LoginDTO loginDTO = new LoginDTO(username, Base64.getDecoder().decode(password));
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-            DataInputStream in = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
+
+            sendHelloMessage(out);
+
+            sendMacKey(out);
 
             var salt = userPersistent.get().getPasswordSalt();
             System.out.println("salt: " + Arrays.toString(salt));
@@ -407,19 +404,11 @@ public class UserServiceImpl implements UserService {
     public void register(String username, String password) {
         try {
 
-            /*
-            registerLock.lock();
-            try {
-                while (!registerContinue) {
-                    registerCanContinue.await();
-                }
-            } finally {
-                registerLock.unlock();
-            }
-
-             */
-
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+
+            sendHelloMessage(out);
+
+            sendMacKey(out);
 
             User user = new User(username, password);
             user.setIP(IP);
