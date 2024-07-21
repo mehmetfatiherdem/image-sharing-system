@@ -2,11 +2,9 @@ package dao;
 
 import db.MyDB;
 import dto.UserDTO;
-import userlocal.UserStorage;
 
 import java.security.PrivateKey;
 import java.util.Optional;
-import java.util.Set;
 
 public class UserDaoImpl implements UserDao{
 
@@ -33,23 +31,6 @@ public class UserDaoImpl implements UserDao{
 
         return Optional.of(new UserDTO(user.getUsername(), user.getPassword(), user.getPasswordSalt(), user.getIP()));
 
-    }
-
-    @Override
-    public Optional<UserDTO> getInMemoryUserWithUsername(String username) {
-        var users = myDB.getInMemoryUsers();
-
-        var user = users.stream()
-                .filter(u -> u.getUsername().equals(username))
-                .findFirst()
-                .orElse(null);
-
-        if (user == null) {
-            System.out.println("User not found");
-            return Optional.empty();
-        }
-
-        return Optional.of(user);
     }
 
     @Override
@@ -87,22 +68,6 @@ public class UserDaoImpl implements UserDao{
         return Optional.empty();
     }
 
-    @Override
-    public void addServerNonce(String ip, String nonce) {
-        myDB.getInMemoryUsers().stream()
-                .filter(user -> user.getIP().equals(ip))
-                .findFirst()
-                .ifPresent(user -> user.getUserStorage().addServerNonceUsed(nonce));
-    }
-
-    @Override
-    public Set<String> getServerNonces(String ip) {
-        return myDB.getInMemoryUsers().stream()
-                .filter(user -> user.getIP().equals(ip))
-                .findFirst()
-                .map(user -> user.getUserStorage().getServerNoncesUsed())
-                .orElse(null);
-    }
 
     @Override
     public void addInMemoryUser(UserDTO user) {
@@ -112,18 +77,5 @@ public class UserDaoImpl implements UserDao{
     @Override
     public void addPersistentUser(UserDTO user) {
         myDB.addPersistentUser(user.getIP(), user.getUsername(), user.getPassword(), user.getPasswordSalt(), user.getCertificate());
-    }
-
-    @Override
-    public void addUserStorage(UserStorage userStorage) {
-        myDB.addUserStorage(userStorage);
-    }
-
-    @Override
-    public UserStorage getUserStorageWithIP(String ip) {
-        return myDB.getUserStorages().stream()
-                .filter(storage -> storage.getIp().equals(ip))
-                .findFirst()
-                .orElse(null);
     }
 }

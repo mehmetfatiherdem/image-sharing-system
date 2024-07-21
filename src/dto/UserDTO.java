@@ -2,13 +2,10 @@ package dto;
 
 import model.Certificate;
 import model.Session;
-import userlocal.UserStorage;
 
 import java.security.KeyPair;
 import java.security.PublicKey;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 public class UserDTO {
@@ -21,7 +18,6 @@ public class UserDTO {
     private KeyPair keyPair;
     private PublicKey publicKey;
     private Set<String> noncesUsed = new HashSet<>();
-    private UserStorage userStorage;
     private byte[] MAC;
     private Session session;
 
@@ -29,10 +25,7 @@ public class UserDTO {
     public UserDTO(String ip) {
         this.IP = ip;
     }
-    public UserDTO(String ip, UserStorage userStorage) {
-        this.IP = ip;
-        this.userStorage = userStorage;
-    }
+
     public UserDTO(String username, byte[] password) {
         this.username = username;
         this.password = password;
@@ -55,7 +48,7 @@ public class UserDTO {
         this.IP = IP;
     }
 
-    public UserDTO(String IP, String username, byte[] password, byte[] passwordSalt, boolean isOnline, Certificate certificate, KeyPair keyPair, Set<String> noncesUsed, UserStorage userStorage, byte[] MAC, Session session) {
+    public UserDTO(String IP, String username, byte[] password, byte[] passwordSalt, boolean isOnline, Certificate certificate, KeyPair keyPair, Set<String> noncesUsed, byte[] MAC, Session session) {
         this.IP = IP;
         this.username = username;
         this.password = password;
@@ -64,7 +57,6 @@ public class UserDTO {
         this.certificate = certificate;
         this.keyPair = keyPair;
         this.noncesUsed = noncesUsed;
-        this.userStorage = userStorage;
         this.MAC = MAC;
         this.session = session;
     }
@@ -94,9 +86,6 @@ public class UserDTO {
     public byte[] getPassword() {
         return password;
     }
-    public boolean isOnline() {
-        return isOnline;
-    }
     public void setOnline(boolean online) {
         isOnline = online;
     }
@@ -117,12 +106,6 @@ public class UserDTO {
     }
     public void addNonceUsed(String nonce) {
         noncesUsed.add(nonce);
-    }
-    public UserStorage getUserStorage() {
-        return userStorage;
-    }
-    public void setUserStorage(UserStorage userStorage) {
-        this.userStorage = userStorage;
     }
     public byte[] getMAC() {
         return MAC;

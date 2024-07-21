@@ -2,7 +2,6 @@ package model;
 
 import helper.security.Authentication;
 import helper.security.Confidentiality;
-import userlocal.UserStorage;
 
 import java.security.KeyPair;
 

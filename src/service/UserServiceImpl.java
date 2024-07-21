@@ -10,8 +10,6 @@ import logger.MyLogger;
 import model.Certificate;
 import model.User;
 import repository.UserRepository;
-import userlocal.UserStorage;
-
 import javax.crypto.SecretKey;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -30,9 +28,11 @@ public class UserServiceImpl implements UserService {
     private final Socket socket;
     private String sessionID;
     private volatile PublicKey serverPubKey;
+    private byte[] privateKey;
     private byte[] hmacK;
     private byte[] hmacGlobal;
     private String IP;
+    private String username;
     private Set<String> serverNoncesUsed = new HashSet<>();
     private final Map<String, String> accessListPublicKeys = new ConcurrentHashMap<>();
 
@@ -164,8 +164,6 @@ public class UserServiceImpl implements UserService {
 
 
             } else if(messageKeyValues.get("message").equals("AUTHENTICATED")) {
-                var userStorage = userRepository.getUserStorageWithIP(IP);
-                userStorage.setSessionID(messageKeyValues.get("sessionID"));
                 this.sessionID = messageKeyValues.get("sessionID");
                 System.out.println("[client] server response after login: " + messageKeyValues.get("sessionID"));
 
@@ -415,11 +413,10 @@ public class UserServiceImpl implements UserService {
             user.assignKeyPair();
             user.assignSalt();
 
-            UserStorage userStorage = new UserStorage(user.getIP(), user.getUsername(), user.getKeyPair().getPrivate().getEncoded());
+            this.username = username;
+            this.privateKey = user.getKeyPair().getPrivate().getEncoded();
 
-            userRepository.addUserStorage(userStorage);
-
-            var userDTO = new UserDTO(user.getIP(), userStorage);
+            var userDTO = new UserDTO(user.getIP()); //TODO: no user storage anymore so pass the required stuff directly
 
             userDTO.setUsername(username);
             userDTO.setPasswordSalt(user.getPasswordSalt());
@@ -522,8 +519,6 @@ public class UserServiceImpl implements UserService {
 
             // hash and sign the image
             byte[] imageHash = Confidentiality.generateMessageDigest(imageBytes);
-
-            var privateKey = userRepository.getUserStorageWithIP(IP).getPrivateKey();
 
             if (privateKey == null){
                 System.out.println("[client] no private key found for user");
@@ -634,7 +629,7 @@ public class UserServiceImpl implements UserService {
                     File outputDir = new File("src/downloads");
 
                     // Write the BufferedImage to a file in the src/downloads directory
-                    File outputFile = new File(outputDir, messageKeyValues.get("imageName") + "_" + userRepository.getUserStorageWithIP(IP).getUserName() + "_" + ".png");
+                    File outputFile = new File(outputDir, messageKeyValues.get("imageName") + "_" + username + "_" + ".png");
                     try {
                         ImageIO.write(bufferedImage, "png", outputFile);
                         System.out.println("[client] " + IP  + " image saved to downloads folder as png in " + outputFile.getAbsolutePath());
