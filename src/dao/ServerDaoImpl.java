@@ -73,7 +73,7 @@ public class ServerDaoImpl implements ServerDao{
         var users = serverStorage.getUsers();
         for (var user : users) {
             if (user.getIP().equals(ip)) {
-                return user.getNoncesUsed();
+                return user.getNonceUsed();
             }
         }
 

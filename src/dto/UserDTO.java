@@ -13,11 +13,10 @@ public class UserDTO {
     private String username;
     private byte[] password;
     private byte[] passwordSalt;
-    private boolean isOnline;
     private Certificate certificate;
     private KeyPair keyPair;
     private PublicKey publicKey;
-    private Set<String> noncesUsed = new HashSet<>();
+    private Set<String> nonceUsed = new HashSet<>();
     private byte[] MAC;
     private Session session;
 
@@ -48,15 +47,14 @@ public class UserDTO {
         this.IP = IP;
     }
 
-    public UserDTO(String IP, String username, byte[] password, byte[] passwordSalt, boolean isOnline, Certificate certificate, KeyPair keyPair, Set<String> noncesUsed, byte[] MAC, Session session) {
+    public UserDTO(String IP, String username, byte[] password, byte[] passwordSalt, Certificate certificate, KeyPair keyPair, Set<String> nonceUsed, byte[] MAC, Session session) {
         this.IP = IP;
         this.username = username;
         this.password = password;
         this.passwordSalt = passwordSalt;
-        this.isOnline = isOnline;
         this.certificate = certificate;
         this.keyPair = keyPair;
-        this.noncesUsed = noncesUsed;
+        this.nonceUsed = nonceUsed;
         this.MAC = MAC;
         this.session = session;
     }
@@ -86,26 +84,20 @@ public class UserDTO {
     public byte[] getPassword() {
         return password;
     }
-    public void setOnline(boolean online) {
-        isOnline = online;
-    }
     public Certificate getCertificate() {
         return certificate;
     }
     public void setCertificate(Certificate certificate) {
         this.certificate = certificate;
     }
-    public void setIP(String IP) {
-        this.IP = IP;
-    }
     public String getIP() {
         return IP;
     }
-    public Set<String> getNoncesUsed() {
-        return noncesUsed;
+    public Set<String> getNonceUsed() {
+        return nonceUsed;
     }
     public void addNonceUsed(String nonce) {
-        noncesUsed.add(nonce);
+        nonceUsed.add(nonce);
     }
     public byte[] getMAC() {
         return MAC;

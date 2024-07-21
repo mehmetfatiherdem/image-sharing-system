@@ -29,11 +29,10 @@ public class UserServiceImpl implements UserService {
     private String sessionID;
     private volatile PublicKey serverPubKey;
     private byte[] privateKey;
-    private byte[] hmacK;
-    private byte[] hmacGlobal;
+    private byte[] hmac;
     private String IP;
     private String username;
-    private Set<String> serverNoncesUsed = new HashSet<>();
+    private Set<String> serverNonceUsed = new HashSet<>();
     private final Map<String, String> accessListPublicKeys = new ConcurrentHashMap<>();
 
     private final Lock postImageLock = new ReentrantLock();
@@ -55,7 +54,6 @@ public class UserServiceImpl implements UserService {
     public void listenServer() {
         try {
             DataInputStream in = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
-            DataOutputStream out = new DataOutputStream(socket.getOutputStream());
             System.out.println("[client] Listening for messages");
 
             while (true) {
@@ -86,21 +84,15 @@ public class UserServiceImpl implements UserService {
                 var serverNonce = messageKeyValues.get("nonce");
                 System.out.println("[client] " + IP + " Server nonce received: " + serverNonce);
 
-                if (serverNoncesUsed.contains(serverNonce)) {
+                if (serverNonceUsed.contains(serverNonce)) {
                     System.out.println("Nonce already used replay attack alert!!!");
 
                 } else {
-                    //userRepository.getUserStorageWithIP(messageKeyValues.get("ip")).addServerNonceUsed(serverNonce);
-                    serverNoncesUsed.add(serverNonce);
-                    //user.getUserStorage().addServerNonceUsed(serverNonce);
-                    //userRepository.getUserStorageWithIP(messageKeyValues.get("ip")).setServerPublicKey(Base64.getDecoder().decode(messageKeyValues.get("publicKey")));
-
+                    serverNonceUsed.add(serverNonce);
 
                     setServerPubKey(Confidentiality.getPublicKeyFromString(messageKeyValues.get("publicKey")));
 
                     System.out.println("[client] " + IP + "Server public key received: " + serverPubKey.toString());
-
-                    //user.getUserStorage().setServerPublicKey(Base64.getDecoder().decode(messageKeyValues.get("publicKey")));
 
                     macLock.lock();
                     try {
@@ -116,16 +108,6 @@ public class UserServiceImpl implements UserService {
 
             } else if (messageKeyValues.get("message").equals("MAC_RECEIVED")) {
                 System.out.println("[client] Server received MAC key");
-                /*
-                registerLock.lock();
-                try {
-                    registerContinue = true;
-                    registerCanContinue.signalAll();
-                } finally {
-                    registerLock.unlock();
-                }
-
-                 */
 
             } else if (messageKeyValues.get("message").equals("USERNAME_TAKEN")) {
 
@@ -211,7 +193,7 @@ public class UserServiceImpl implements UserService {
                 String m = Message.formatMessage("SESSION_NOTIFICATION", new HashMap<>(){{
                     put("sessionID", Confidentiality.encodeByteKeyToStringBase64(Confidentiality.encryptWithPublicKey(sessionID.getBytes(), getServerPubKey())));
                     put("ip", IP);
-                    put("mac", Confidentiality.encodeByteKeyToStringBase64(hmacGlobal));
+                    put("mac", Confidentiality.encodeByteKeyToStringBase64(hmac));
                 }});
 
                 out.writeUTF(m);
@@ -291,13 +273,9 @@ public class UserServiceImpl implements UserService {
 
             // send MAC key to server
             byte[] macKey = Authentication.generateMACKey();
-            //byte[] pms = Confidentiality.generateAESKey(256).getEncoded();
             byte[] MAC = Authentication.generateMAC("Secretmsg123!".getBytes(), macKey);
 
-            hmacK = macKey;
-            hmacGlobal = MAC;
-
-
+            hmac = MAC;
 
             System.out.println("[client] " + IP + " MAC key generated: " + Arrays.toString(macKey));
 
@@ -378,7 +356,7 @@ public class UserServiceImpl implements UserService {
                 put("ip", user.getIP());
                 put("aesKey", Confidentiality.encodeByteKeyToStringBase64(encryptedAesKey));
                 put("iv", Confidentiality.encodeByteKeyToStringBase64(encryptedIv));
-                put("mac", Confidentiality.encodeByteKeyToStringBase64(hmacGlobal));
+                put("mac", Confidentiality.encodeByteKeyToStringBase64(hmac));
             }});
 
 
@@ -439,7 +417,7 @@ public class UserServiceImpl implements UserService {
                 put("ip", user.getIP());
                 put("aesKey", Confidentiality.encodeByteKeyToStringBase64(encryptedAesKey));
                 put("iv", Confidentiality.encodeByteKeyToStringBase64(encryptedIv));
-                put("mac", Confidentiality.encodeByteKeyToStringBase64(hmacGlobal));
+                put("mac", Confidentiality.encodeByteKeyToStringBase64(hmac));
                 put("salt", Confidentiality.encodeByteKeyToStringBase64(encryptedSalt));
                 put("publicKey", Base64.getEncoder().encodeToString(user.getKeyPair().getPublic().getEncoded()));
             }});
@@ -482,7 +460,7 @@ public class UserServiceImpl implements UserService {
                         put("accessList", _accessList);
                         put("sessionID", Confidentiality.encodeByteKeyToStringBase64(encryptedSessionID));
                         put("ip", IP);
-                        put("mac", Confidentiality.encodeByteKeyToStringBase64(hmacGlobal));
+                        put("mac", Confidentiality.encodeByteKeyToStringBase64(hmac));
 
                     }});
 
@@ -532,7 +510,7 @@ public class UserServiceImpl implements UserService {
                     put("digitalSignature", Confidentiality.encodeByteKeyToStringBase64(digitalSignature));
                     put("iv", Confidentiality.encodeByteKeyToStringBase64(iv));
                     put("sessionID", Confidentiality.encodeByteKeyToStringBase64(encryptedSessionID));
-                    put("mac", Confidentiality.encodeByteKeyToStringBase64(hmacGlobal));
+                    put("mac", Confidentiality.encodeByteKeyToStringBase64(hmac));
                     put("ip", IP);
                 }};
 
@@ -581,7 +559,7 @@ public class UserServiceImpl implements UserService {
                         put("imageName", imageName);
                         put("sessionID", Confidentiality.encodeByteKeyToStringBase64(encryptedSessionID));
                         put("ip", IP);
-                        put("mac", Confidentiality.encodeByteKeyToStringBase64(hmacGlobal));
+                        put("mac", Confidentiality.encodeByteKeyToStringBase64(hmac));
 
                     }});
             out.writeUTF(downloadMessage);

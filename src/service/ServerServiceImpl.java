@@ -194,7 +194,6 @@ public class ServerServiceImpl implements ServerService, Runnable{
                     user.setPasswordSalt(retrievedSalt);
                     user.setUsername(messageKeyValues.get("username"));
                     user.setPublicKey(Confidentiality.getPublicKeyFromByteArray(Confidentiality.decodeStringKeyToByteBase64(messageKeyValues.get("publicKey"))));
-                    user.setOnline(false);
 
 
                     // sign client public key with client username and create a certificate
@@ -263,8 +262,6 @@ public class ServerServiceImpl implements ServerService, Runnable{
 
                     if (Arrays.equals(user.getPassword(), hashedPassword)) {
                         System.out.println("[server] Passwords match");
-
-                        user.setOnline(true);
 
                         Session session = new Session(messageKeyValues.get("username"));
 
