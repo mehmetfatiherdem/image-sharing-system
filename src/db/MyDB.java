@@ -1,7 +1,6 @@
 package db;
 
 import dto.UserDTO;
-import entity.UserEntity;
 import model.Certificate;
 import model.User;
 
@@ -11,7 +10,7 @@ import java.util.ArrayList;
 public class MyDB {
     private static MyDB instance;
     // private final ArrayList<UserDTO> inMemoryUsers = new ArrayList<>();
-    private final ArrayList<UserEntity> persistentUsers = new ArrayList<>();
+    private final ArrayList<User> persistentUsers = new ArrayList<>();
 
     private MyDB() {
 
@@ -37,9 +36,9 @@ public class MyDB {
 
     public synchronized  void addPersistentUser(String username, byte[] password, byte[] passwordSalt, Certificate certificate) {
         try{
-            UserEntity userEntity =
-                    new UserEntity(username, password, passwordSalt, certificate);
-            persistentUsers.add(userEntity);
+            User user =
+                    new User(username, password, passwordSalt, certificate);
+            persistentUsers.add(user);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -51,7 +50,7 @@ public class MyDB {
 
 
  */
-    public synchronized  ArrayList<UserEntity> getPersistentUsers() {
+    public synchronized  ArrayList<User> getPersistentUsers() {
         return persistentUsers;
     }
 /*

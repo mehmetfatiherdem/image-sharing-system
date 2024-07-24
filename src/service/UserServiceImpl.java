@@ -325,10 +325,10 @@ public class UserServiceImpl implements UserService {
             User user;
 
             if(userPersistent.isEmpty()) {
-                user = new User(userPersistent.get().getUsername(), Confidentiality.encodeByteKeyToStringBase64(userPersistent.get().getPassword()));
+                user = new User(userPersistent.get().getUsername(), userPersistent.get().getPassword());
                 //userRepository.addInMemoryUser(new UserDTO(userPersistent.get().getUsername(), userPersistent.get().getPassword(), userPersistent.get().getIP()));
             } else {
-                user = new User(userPersistent.get().getUsername(), Confidentiality.encodeByteKeyToStringBase64(userPersistent.get().getPassword()));
+                user = new User(userPersistent.get().getUsername(), userPersistent.get().getPassword());
             }
 
             var aesKey = Confidentiality.generateAESKey(256);
@@ -370,7 +370,7 @@ public class UserServiceImpl implements UserService {
 
             sendMacKey(out);
 
-            User user = new User(username, password);
+            User user = new User(username, password.getBytes()); // FIXME: this string to byte conversion may cause headache
             user.assignKeyPair();
             user.assignSalt();
 

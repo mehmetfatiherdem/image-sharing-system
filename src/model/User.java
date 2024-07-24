@@ -7,13 +7,21 @@ import java.security.KeyPair;
 
 public class User {
     private String username;
-    private String password;
+    private byte[] password;
     private byte[] passwordSalt;
     private KeyPair keyPair;
+    private Certificate certificate;
 
-    public User(String username, String password) {
+    public User(String username, byte[] password) {
         this.username = username;
         this.password = password;
+    }
+
+    public User(String username, byte[] password, byte[] passwordSalt, Certificate certificate) {
+        this.username = username;
+        this.password = password;
+        this.passwordSalt = passwordSalt;
+        this.certificate = certificate;
     }
 
 
@@ -49,7 +57,13 @@ public class User {
     public KeyPair getKeyPair() {
         return keyPair;
     }
-    public String getPassword() {
+    public byte[] getPassword() {
         return password;
+    }
+    public void setPassword(byte[] password) {
+        this.password = password;
+    }
+    public Certificate getCertificate() {
+        return certificate;
     }
 }
