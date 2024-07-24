@@ -46,22 +46,24 @@ public class NotificationServiceImpl implements NotificationService {
                             serverRepository.getPrivateKey());
                     System.out.println("[server] post image arrived session id: " + Arrays.toString(sessionID));
 
-                    var user = serverRepository.getUserWithIP(messageKeyValues.get("ip"));
+                    var user = serverRepository.getUserWithUsername(messageKeyValues.get("username"));
                     var session = user.getSession();
 
                     if(user.getSession() == null) {
-                        System.out.println("[server] userIP: " + messageKeyValues.get("ip") + " not authenticated");
+                        System.out.println("[server] username: " + messageKeyValues.get("username") + " not authenticated");
                         out.writeUTF(Message.formatMessage("SESSION_NOT_FOUND_NOTIFICATION", new HashMap<>(){{
-                            put("ip", messageKeyValues.get("ip"));
+                            // put("ip", messageKeyValues.get("ip"));
+                            put("username", messageKeyValues.get("username"));
                         }}));
                         continue;
                     }
 
                     if(session.isTimedOut()) {
-                        System.out.println("[server] session for userIP: " + messageKeyValues.get("ip") + " is timed out");
+                        System.out.println("[server] session for username: " + messageKeyValues.get("username") + " is timed out");
                         user.setSession(null);
                         out.writeUTF(Message.formatMessage("SESSION_TIME_OUT_NOTIFICATION",  new HashMap<>(){{
-                            put("ip", messageKeyValues.get("ip"));
+                            // put("ip", messageKeyValues.get("ip"));
+                            put("username", messageKeyValues.get("username"));
                         }}));
                         continue;
                     }
@@ -73,7 +75,7 @@ public class NotificationServiceImpl implements NotificationService {
                     var notificationMessage = Message.formatMessage("NEW_IMAGE", new HashMap<>(){{
                         put("ip", messageKeyValues.get("ip"));
                         put("imageName", imageKeyValues.get("imageName"));
-                        put("owner", serverRepository.getUserWithIP(messageKeyValues.get("ip")).getUsername());
+                        put("owner", serverRepository.getUserWithUsername(messageKeyValues.get("username")).getUsername());
                     }});
 
                     out.writeUTF(notificationMessage);

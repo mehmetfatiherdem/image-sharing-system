@@ -8,6 +8,6 @@ public interface ServerService {
     void listen();
     void handleClientMessage(Map<String, String> messageKeyValues);
     void sendNotification(Map<String, String> messageKeyValues);
-    void createCertificate(UserCertificateCredentials userCertificateCredentials, byte[] sign, String ip);
+    void createCertificate(UserCertificateCredentials userCertificateCredentials, byte[] sign);
 
 }

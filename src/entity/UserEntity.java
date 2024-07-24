@@ -3,14 +3,12 @@ package entity;
 import model.Certificate;
 
 public class UserEntity {
-    private String IP;
     private String username;
     private byte[] password;
     private byte[] passwordSalt;
     private Certificate certificate;
 
-    public UserEntity(String IP, String username, byte[] password, byte[] passwordSalt, Certificate certificate) throws Exception {
-        this.IP = IP;
+    public UserEntity(String username, byte[] password, byte[] passwordSalt, Certificate certificate) {
         this.username = username;
         this.password = password;
         this.passwordSalt = passwordSalt;
@@ -35,11 +33,5 @@ public class UserEntity {
     }
     public byte[] getPassword() {
         return password;
-    }
-    public String getIP() {
-        return IP;
-    }
-    public void setIP(String IP) {
-        this.IP = IP;
     }
 }

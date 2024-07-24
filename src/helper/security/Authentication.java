@@ -11,14 +11,8 @@ import java.security.*;
 import java.security.spec.KeySpec;
 import java.util.Arrays;
 import java.util.Base64;
-import java.util.HashSet;
-import java.util.Set;
-
 
 public class Authentication {
-    private static final String START_IP = "192.168.0.1";
-    private static final String END_IP = "192.168.0.254";
-    private static final Set<String> usedIPs = new HashSet<>();
 
     public static byte[] sign(byte[] data, PrivateKey privateKey) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
         Signature signature = Signature.getInstance("SHA256withRSA");
@@ -96,29 +90,11 @@ public class Authentication {
         return Base64.getEncoder().encodeToString(nonce);
     }
 
-    private static int ipToInt(String ipAddress) {
-        String[] parts = ipAddress.split("\\.");
-        return (Integer.parseInt(parts[0]) << 24) | (Integer.parseInt(parts[1]) << 16)
-                | (Integer.parseInt(parts[2]) << 8) | Integer.parseInt(parts[3]);
-    }
-
     private static String intToIP(int ipAddress) {
         return ((ipAddress >> 24) & 0xFF) + "." + ((ipAddress >> 16) & 0xFF) + "."
                 + ((ipAddress >> 8) & 0xFF) + "." + (ipAddress & 0xFF);
     }
-    public static String generateIP() {
-        int start = ipToInt(START_IP);
-        int end = ipToInt(END_IP);
 
-        for (int ip = start; ip <= end; ip++) {
-            String generatedIP = intToIP(ip);
-            if (!usedIPs.contains(generatedIP)) {
-                usedIPs.add(generatedIP);
-                return generatedIP;
-            }
-        }
-        throw new RuntimeException("No more unique IPs available in the specified range.");
-    }
 
     public static String generateSessionID() {
         SecureRandom random = new SecureRandom();

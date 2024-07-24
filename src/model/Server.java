@@ -28,10 +28,7 @@ public class Server implements Runnable{
     private ServerSocket serverSocket;
     private Socket socket;
     private ServerStorage serverStorage;
-    //private static Set<ServerServiceImpl> clientHandlers = ConcurrentHashMap.newKeySet();
     private static Set<ServerServiceImpl> clientHandlers = ConcurrentHashMap.newKeySet();
-    private static Set<NotificationServiceImpl> notificationHandlers = ConcurrentHashMap.newKeySet();
-
 
     private Server(int port) throws NoSuchAlgorithmException {
         this.port = port;
@@ -70,15 +67,15 @@ public class Server implements Runnable{
 
                  */
 
-                ServerServiceImpl serverServicee = new ServerServiceImpl(serverRepository, socket);
+                ServerServiceImpl serverService = new ServerServiceImpl(serverRepository, socket);
 
                 // notificationHandlers.add(notificationService);
                 // clientHandlers.add(serverService);
 
                 //clientPool.execute(serverService);
 
-                clientHandlers.add(serverServicee);
-                clientPool.execute(serverServicee);
+                clientHandlers.add(serverService);
+                clientPool.execute(serverService);
 
             }
 

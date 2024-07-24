@@ -18,20 +18,9 @@ public class UserRepositoryImpl implements UserRepository{
     }
 
     @Override
-    public Optional<UserDTO> getInMemoryUserWithIP(String ip) {
-        return userDao.getInMemoryUserWithIP(ip);
-    }
-
-    @Override
     public Optional<PrivateKey> getPrivateKey(String username) {
         return userDao.getPrivateKey(username);
     }
-
-    @Override
-    public void addInMemoryUser(UserDTO user) {
-        userDao.addInMemoryUser(user);
-    }
-
     @Override
     public void addPersistentUser(UserDTO user) {
         userDao.addPersistentUser(user);

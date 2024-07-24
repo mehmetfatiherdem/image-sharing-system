@@ -6,6 +6,7 @@ import helper.image.ImageMetaData;
 import helper.security.Confidentiality;
 import model.Certificate;
 import serverlocal.ServerStorage;
+import service.ServerService;
 
 import java.security.PrivateKey;
 import java.security.PublicKey;
@@ -37,13 +38,13 @@ public class ServerDaoImpl implements ServerDao{
         return images;
     }
 
-    public void saveCertificate(Certificate certificate, String ip) {
-        var users = serverStorage.getUsers();
-        for (var user : users) {
-            if (user.getIP().equals(ip)) {
-                user.setCertificate(certificate);
-            }
-        }
+    public void saveCertificate(Certificate certificate) {
+        var user = serverStorage.getUsers().stream()
+                .filter(u -> u.getUsername().equals(certificate.getCertificateCredentials().getUsername()))
+                .findFirst();
+
+        user.get().setCertificate(certificate);
+
     }
 
     @Override
@@ -69,28 +70,6 @@ public class ServerDaoImpl implements ServerDao{
     }
 
     @Override
-    public Set<String> getNoncesUsed(String ip) {
-        var users = serverStorage.getUsers();
-        for (var user : users) {
-            if (user.getIP().equals(ip)) {
-                return user.getNonceUsed();
-            }
-        }
-
-        return null;
-    }
-
-    @Override
-    public void addNonceUsed(String ip, String nonce) {
-        var users = serverStorage.getUsers();
-        for (var user : users) {
-            if (user.getIP().equals(ip)) {
-                user.addNonceUsed(nonce);
-            }
-        }
-    }
-
-    @Override
     public void addUser(UserDTO user) {
         serverStorage.addUser(user);
     }
@@ -98,18 +77,6 @@ public class ServerDaoImpl implements ServerDao{
     @Override
     public List<UserDTO> getUsers() {
         return serverStorage.getUsers();
-    }
-
-    @Override
-    public UserDTO getUserWithIP(String ip) {
-        var users = serverStorage.getUsers();
-        for (var user : users) {
-            if (user.getIP().equals(ip)) {
-                return user;
-            }
-        }
-
-        return null;
     }
 
     @Override

@@ -6,7 +6,6 @@ import helper.security.Confidentiality;
 import java.security.KeyPair;
 
 public class User {
-    private String IP;
     private String username;
     private String password;
     private byte[] passwordSalt;
@@ -34,10 +33,6 @@ public class User {
         }
     }
 
-    public void assignIP(){
-        this.IP = Authentication.generateIP();
-    }
-
     // Getters and setters
     public String getUsername() {
         return username;
@@ -56,11 +51,5 @@ public class User {
     }
     public String getPassword() {
         return password;
-    }
-    public String getIP() {
-        return IP;
-    }
-    public void setIP(String IP) {
-        this.IP = IP;
     }
 }

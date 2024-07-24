@@ -14,13 +14,10 @@ import java.util.Set;
 public interface ServerRepository {
     void saveImage(ImageMetaData metaData, ImageDownloadData imageDownloadData);
     Map<ImageMetaData, ImageDownloadData> getImageByName(String imageName);
-    void addCertificate(Certificate certificate, String ip);
+    void addCertificate(Certificate certificate);
     PublicKey getPublicKey();
     PrivateKey getPrivateKey();
-    Set<String> getNoncesUsed(String ip);
-    void addNonceUsed(String ip, String nonce);
     List<UserDTO> getUsers();
     void addUser(UserDTO user);
-    UserDTO getUserWithIP(String ip);
     UserDTO getUserWithUsername(String username);
 }

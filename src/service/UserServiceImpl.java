@@ -30,11 +30,9 @@ public class UserServiceImpl implements UserService {
     private volatile PublicKey serverPubKey;
     private byte[] privateKey;
     private byte[] hmac;
-    private String IP;
     private String username;
     private Set<String> serverNonceUsed = new HashSet<>();
     private final Map<String, String> accessListPublicKeys = new ConcurrentHashMap<>();
-
     private final Lock postImageLock = new ReentrantLock();
     private final Condition postImageCanContinue = postImageLock.newCondition();
     private boolean postImageContinue = false;
@@ -58,11 +56,7 @@ public class UserServiceImpl implements UserService {
 
             while (true) {
                 String message = in.readUTF();
-                if (IP == null) {
-                    MyLogger.log(" RECEIVED " + message);
-                } else {
-                    MyLogger.log(" " + IP + " RECEIVED " + message);
-                }
+
                 var messageKeyValues = Message.getKeyValuePairs(message);
 
                 handleServerMessage(messageKeyValues);
@@ -82,7 +76,7 @@ public class UserServiceImpl implements UserService {
 
             if (messageKeyValues.get("message").equals("PUBLICKEY")) {
                 var serverNonce = messageKeyValues.get("nonce");
-                System.out.println("[client] " + IP + " Server nonce received: " + serverNonce);
+                System.out.println("[client] " + socket + " Server nonce received: " + serverNonce);
 
                 if (serverNonceUsed.contains(serverNonce)) {
                     System.out.println("Nonce already used replay attack alert!!!");
@@ -92,7 +86,7 @@ public class UserServiceImpl implements UserService {
 
                     setServerPubKey(Confidentiality.getPublicKeyFromString(messageKeyValues.get("publicKey")));
 
-                    System.out.println("[client] " + IP + "Server public key received: " + serverPubKey.toString());
+                    System.out.println("[client] " + socket + "Server public key received: " + serverPubKey.toString());
 
                     macLock.lock();
                     try {
@@ -116,26 +110,26 @@ public class UserServiceImpl implements UserService {
                 MyLogger.log("Username taken");
 
             } else if (messageKeyValues.get("message").equals("CERTIFICATE")) {
+                //var inMemoryUser = userRepository.getInMemoryUserWithIP(IP).orElseThrow();
+                var user = userRepository.getPersistentUser(messageKeyValues.get("username")).orElseThrow();
 
-                var inMemoryUser = userRepository.getInMemoryUserWithIP(IP).orElseThrow();
+                if (messageKeyValues.get("username").equals(user.getUsername()) &&
+                        messageKeyValues.get("publicKey").equals(user.getKeyPair().getPublic().toString())) {
 
-                if (messageKeyValues.get("username").equals(inMemoryUser.getUsername()) &&
-                        messageKeyValues.get("publicKey").equals(inMemoryUser.getKeyPair().getPublic().toString())) {
-
-                    inMemoryUser.setCertificate(new Certificate(new UserCertificateCredentials(inMemoryUser.getUsername(), inMemoryUser.getKeyPair().getPublic()),
+                    user.setCertificate(new Certificate(new UserCertificateCredentials(user.getUsername(), user.getKeyPair().getPublic()),
                             Base64.getDecoder().decode(messageKeyValues.get("signature"))));
 
-                    inMemoryUser.setPassword(Base64.getDecoder().decode(messageKeyValues.get("password")));
+                    user.setPassword(Base64.getDecoder().decode(messageKeyValues.get("password")));
 
-                    userRepository.addPersistentUser(inMemoryUser);
+                    userRepository.addPersistentUser(user);
 
                     System.out.println("[client] server retrieved public key and username correctly");
 
-                    if(userRepository.getPersistentUser(inMemoryUser.getUsername()).isPresent()) {
+                    if(userRepository.getPersistentUser(user.getUsername()).isPresent()) {
 
                         System.out.println("User registered to persistent users successfully");
-                        System.out.println("[client] User registered info: " + userRepository.getPersistentUser(inMemoryUser.getUsername()).get().getUsername()
-                            + " " + Arrays.toString(userRepository.getPersistentUser(inMemoryUser.getUsername()).get().getPassword())
+                        System.out.println("[client] User registered info: " + userRepository.getPersistentUser(user.getUsername()).get().getUsername()
+                            + " " + Arrays.toString(userRepository.getPersistentUser(user.getUsername()).get().getPassword())
                         );
                     } else {
                         System.out.println("User not registered");
@@ -168,7 +162,7 @@ public class UserServiceImpl implements UserService {
 
 
                 for (var kV : messageKeyValues.entrySet()) {
-                    if (!kV.getKey().equals("message") && !kV.getKey().equals("ip")) {
+                    if (!kV.getKey().equals("message") && !kV.getKey().equals("username")) {
                         accessListPublicKeys.put(kV.getKey(), kV.getValue());
                     }
                 }
@@ -192,24 +186,27 @@ public class UserServiceImpl implements UserService {
                 }
                 String m = Message.formatMessage("SESSION_NOTIFICATION", new HashMap<>(){{
                     put("sessionID", Confidentiality.encodeByteKeyToStringBase64(Confidentiality.encryptWithPublicKey(sessionID.getBytes(), getServerPubKey())));
-                    put("ip", IP);
+                    //put("ip", IP);
+                    put("username", username);
                     put("mac", Confidentiality.encodeByteKeyToStringBase64(hmac));
                 }});
 
                 out.writeUTF(m);
 
-                if (IP == null) {
+                if (username == null) {
                     MyLogger.log(" SENT " + m);
                 } else {
-                    MyLogger.log(" " + IP + " SENT " + m);
+                    MyLogger.log(" " + username + " SENT " + m);
                 }
+
+
 
             } else if (messageKeyValues.get("message").equals("SESSION_NOT_FOUND_NOTIFICATION") ||
                     messageKeyValues.get("message").equals("SESSION_TIME_OUT_NOTIFICATION")) {
                 System.out.println("[client] session not found or timed out notification");
 
             } else if (messageKeyValues.get("message").equals("NEW_IMAGE")) {
-                System.out.println("[client] ip: " + IP + " new image notification: " + messageKeyValues.get("imageName") + " from " + messageKeyValues.get("owner"));
+                System.out.println("[client] username: " + username + " new image notification: " + messageKeyValues.get("imageName") + " from " + messageKeyValues.get("owner"));
 
             } else if (messageKeyValues.get("message").equals("DOWNLOAD_IMAGE")) {
 
@@ -231,26 +228,23 @@ public class UserServiceImpl implements UserService {
         try {
 
             String nonceClient = Authentication.generateNonce();
-
+            /*
             if (IP == null) {
                 IP = Authentication.generateIP();
             }
 
+             */
+
             String helloMsg = Message.formatMessage("HELLO", new HashMap<>(){{
                 put("nonce", nonceClient);
-                put("ip", IP);
+                // put("ip", IP);
             }});
 
             System.out.println("[client] hello message: " + helloMsg);
-            MyLogger.log("[client] " + IP + " " + helloMsg);
+            MyLogger.log("[client] " + socket + " " + helloMsg);
 
             out.writeUTF(helloMsg);
 
-            if (IP == null) {
-                MyLogger.log(" SENT " + helloMsg);
-            } else {
-                MyLogger.log(" " + IP + " SENT " + helloMsg);
-            }
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -277,13 +271,13 @@ public class UserServiceImpl implements UserService {
 
             hmac = MAC;
 
-            System.out.println("[client] " + IP + " MAC key generated: " + Arrays.toString(macKey));
+            System.out.println("[client] " + socket + " MAC key generated: " + Arrays.toString(macKey));
 
             if (getServerPubKey() == null) {
-                System.out.println("[client] " + IP + " Server public key null");
+                System.out.println("[client] " + socket + " Server public key null");
 
             } else {
-                System.out.println("[client] " + IP + " getServerPubKey(): " + getServerPubKey().toString());
+                System.out.println("[client] " + socket + " getServerPubKey(): " + getServerPubKey().toString());
 
             }
 
@@ -292,17 +286,15 @@ public class UserServiceImpl implements UserService {
             String macKeyString = Message.formatMessage("MAC", new HashMap<>(){{
                 put("secretMessage", "Secretmsg123!");
                 put("macKey", Confidentiality.encodeByteKeyToStringBase64(encryptedMacKey));
-                put("ip", IP);
+                //put("ip", IP);
             }});
             System.out.println("MAC generated by client: " + Arrays.toString(MAC));
 
             out.writeUTF(macKeyString);
 
-            if (IP == null) {
-                MyLogger.log(" SENT " + macKeyString);
-            } else {
-                MyLogger.log(" " + IP + " SENT " + macKeyString);
-            }
+
+            MyLogger.log(" " + socket + " SENT " + macKeyString);
+
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -328,19 +320,15 @@ public class UserServiceImpl implements UserService {
             var salt = userPersistent.get().getPasswordSalt();
             System.out.println("salt: " + Arrays.toString(salt));
 
-            var userInMemory = userRepository.getInMemoryUserWithIP(userPersistent.get().getIP());
-
-            System.out.println("[client] login: userinmemory: " + userInMemory.isPresent());
+            System.out.println("[client] login: user: " + userPersistent.isPresent());
 
             User user;
 
-            if(userInMemory.isEmpty()) {
+            if(userPersistent.isEmpty()) {
                 user = new User(userPersistent.get().getUsername(), Confidentiality.encodeByteKeyToStringBase64(userPersistent.get().getPassword()));
-                user.setIP(userPersistent.get().getIP());
-                userRepository.addInMemoryUser(new UserDTO(userPersistent.get().getUsername(), userPersistent.get().getPassword(), userPersistent.get().getIP()));
+                //userRepository.addInMemoryUser(new UserDTO(userPersistent.get().getUsername(), userPersistent.get().getPassword(), userPersistent.get().getIP()));
             } else {
-                user = new User(userInMemory.get().getUsername(), Confidentiality.encodeByteKeyToStringBase64(userInMemory.get().getPassword()));
-                user.setIP(userPersistent.get().getIP());
+                user = new User(userPersistent.get().getUsername(), Confidentiality.encodeByteKeyToStringBase64(userPersistent.get().getPassword()));
             }
 
             var aesKey = Confidentiality.generateAESKey(256);
@@ -353,7 +341,6 @@ public class UserServiceImpl implements UserService {
             String loginMessagePayload = Message.formatMessage("LOGIN", new HashMap<>(){{
                 put("username", username);
                 put("password", Confidentiality.encodeByteKeyToStringBase64(encryptedPassword));
-                put("ip", user.getIP());
                 put("aesKey", Confidentiality.encodeByteKeyToStringBase64(encryptedAesKey));
                 put("iv", Confidentiality.encodeByteKeyToStringBase64(encryptedIv));
                 put("mac", Confidentiality.encodeByteKeyToStringBase64(hmac));
@@ -363,11 +350,8 @@ public class UserServiceImpl implements UserService {
 
             out.writeUTF(loginMessagePayload);
 
-            if (IP == null) {
-                MyLogger.log(" SENT " + loginMessagePayload);
-            } else {
-                MyLogger.log(" " + IP + " SENT " + loginMessagePayload);
-            }
+            MyLogger.log(" " + socket + " SENT " + loginMessagePayload);
+
 
             Thread.sleep(1000);
 
@@ -387,14 +371,13 @@ public class UserServiceImpl implements UserService {
             sendMacKey(out);
 
             User user = new User(username, password);
-            user.setIP(IP);
             user.assignKeyPair();
             user.assignSalt();
 
             this.username = username;
             this.privateKey = user.getKeyPair().getPrivate().getEncoded();
 
-            var userDTO = new UserDTO(user.getIP()); //TODO: no user storage anymore so pass the required stuff directly
+            var userDTO = new UserDTO();
 
             userDTO.setUsername(username);
             userDTO.setPasswordSalt(user.getPasswordSalt());
@@ -402,7 +385,7 @@ public class UserServiceImpl implements UserService {
 
             System.out.println("[client] user salt saved: " + Arrays.toString(userDTO.getPasswordSalt()));
 
-            userRepository.addInMemoryUser(userDTO);
+            userRepository.addPersistentUser(userDTO);
 
             var aesKey = Confidentiality.generateAESKey(256);
             var iv = Confidentiality.generateIV(16);
@@ -414,7 +397,6 @@ public class UserServiceImpl implements UserService {
             String message = Message.formatMessage("REGISTER", new HashMap<>(){{
                 put("username", username);
                 put("password", Confidentiality.encodeByteKeyToStringBase64(encryptedPassword));
-                put("ip", user.getIP());
                 put("aesKey", Confidentiality.encodeByteKeyToStringBase64(encryptedAesKey));
                 put("iv", Confidentiality.encodeByteKeyToStringBase64(encryptedIv));
                 put("mac", Confidentiality.encodeByteKeyToStringBase64(hmac));
@@ -426,11 +408,7 @@ public class UserServiceImpl implements UserService {
             // send the encrypted message to the server
             out.writeUTF(message);
 
-            if (IP == null) {
-                MyLogger.log(" SENT " + message);
-            } else {
-                MyLogger.log(" " + IP + " SENT " + message);
-            }
+            MyLogger.log(" " + socket + " SENT " + message);
 
             Thread.sleep(1000);
 
@@ -459,7 +437,7 @@ public class UserServiceImpl implements UserService {
                     new HashMap<>(){{
                         put("accessList", _accessList);
                         put("sessionID", Confidentiality.encodeByteKeyToStringBase64(encryptedSessionID));
-                        put("ip", IP);
+                        put("username", username);
                         put("mac", Confidentiality.encodeByteKeyToStringBase64(hmac));
 
                     }});
@@ -467,11 +445,7 @@ public class UserServiceImpl implements UserService {
 
             out.writeUTF(accessMessage);
 
-            if (IP == null) {
-                MyLogger.log(" SENT " + accessMessage);
-            } else {
-                MyLogger.log(" " + IP + " SENT " + accessMessage);
-            }
+            MyLogger.log(" " + socket + " SENT " + accessMessage);
 
             postImageLock.lock();
             try {
@@ -511,7 +485,7 @@ public class UserServiceImpl implements UserService {
                     put("iv", Confidentiality.encodeByteKeyToStringBase64(iv));
                     put("sessionID", Confidentiality.encodeByteKeyToStringBase64(encryptedSessionID));
                     put("mac", Confidentiality.encodeByteKeyToStringBase64(hmac));
-                    put("ip", IP);
+                    put("username", username);
                 }};
 
                 for (var kV : accessListPublicKeys.entrySet()) {
@@ -527,11 +501,8 @@ public class UserServiceImpl implements UserService {
 
                 out.writeUTF(message);
 
-                if (IP == null) {
-                    MyLogger.log(" SENT " + message);
-                } else {
-                    MyLogger.log(" " + IP + " SENT " + message);
-                }
+                MyLogger.log(" " + socket + " SENT " + message);
+
             }
 
             Thread.sleep(1000);
@@ -558,17 +529,13 @@ public class UserServiceImpl implements UserService {
                     new HashMap<>() {{
                         put("imageName", imageName);
                         put("sessionID", Confidentiality.encodeByteKeyToStringBase64(encryptedSessionID));
-                        put("ip", IP);
+                        put("username", username);
                         put("mac", Confidentiality.encodeByteKeyToStringBase64(hmac));
 
                     }});
             out.writeUTF(downloadMessage);
 
-            if (IP == null) {
-                MyLogger.log(" SENT " + downloadMessage);
-            } else {
-                MyLogger.log(" " + IP + " SENT " + downloadMessage);
-            }
+            MyLogger.log(" " + socket + " SENT " + downloadMessage);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -578,12 +545,14 @@ public class UserServiceImpl implements UserService {
     @Override
     public void extractImage (Map<String, String> messageKeyValues) {
         System.out.println("[client] extracting image");
+        var user = userRepository.getPersistentUser(username).orElseThrow();
+
         try {
-            if (messageKeyValues.get("access").equals("All") || messageKeyValues.get("access").equals(userRepository.getInMemoryUserWithIP(IP).get().getUsername())) {
+            if (messageKeyValues.get("access").equals("All") || messageKeyValues.get("access").equals(user.getUsername())) {
                 System.out.println("[client] image accessible to all");
 
                 var decryptedAesKey = Confidentiality.decryptWithPrivateKey(Confidentiality.decodeStringKeyToByteBase64(messageKeyValues.get("encryptedAESKey")),
-                        userRepository.getInMemoryUserWithIP(IP).get().getKeyPair().getPrivate());
+                        user.getKeyPair().getPrivate());
                 var iv = Confidentiality.decodeStringKeyToByteBase64(messageKeyValues.get("iv"));
                 var encryptedImage = Confidentiality.decodeStringKeyToByteBase64(messageKeyValues.get("imageBytes"));
                 var decryptedImage = Confidentiality.decryptWithAES(encryptedImage, Confidentiality.getSecretKeyFromBytes(decryptedAesKey), iv);
@@ -610,7 +579,7 @@ public class UserServiceImpl implements UserService {
                     File outputFile = new File(outputDir, messageKeyValues.get("imageName") + "_" + username + "_" + ".png");
                     try {
                         ImageIO.write(bufferedImage, "png", outputFile);
-                        System.out.println("[client] " + IP  + " image saved to downloads folder as png in " + outputFile.getAbsolutePath());
+                        System.out.println("[client] " + socket  + " image saved to downloads folder as png in " + outputFile.getAbsolutePath());
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -622,7 +591,7 @@ public class UserServiceImpl implements UserService {
 
 
             } else {
-                System.out.println("[client] " + IP + " image not accessible to you");
+                System.out.println("[client] " + socket + " image not accessible to you");
             }
         } catch (Exception e) {
             e.printStackTrace();

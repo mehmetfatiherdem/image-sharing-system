@@ -29,10 +29,10 @@ public class UserDaoImpl implements UserDao{
         }
 
 
-        return Optional.of(new UserDTO(user.getUsername(), user.getPassword(), user.getPasswordSalt(), user.getIP()));
+        return Optional.of(new UserDTO(user.getUsername(), user.getPassword(), user.getPasswordSalt()));
 
     }
-
+/*
     @Override
     public Optional<UserDTO> getInMemoryUserWithIP(String ip) {
         var users = myDB.getInMemoryUsers();
@@ -49,6 +49,8 @@ public class UserDaoImpl implements UserDao{
 
         return Optional.of(user);
     }
+
+ */
 
     @Override
     public Optional<PrivateKey> getPrivateKey(String username) {
@@ -68,14 +70,16 @@ public class UserDaoImpl implements UserDao{
         return Optional.empty();
     }
 
-
+/*
     @Override
     public void addInMemoryUser(UserDTO user) {
         myDB.addInMemoryUser(user);
     }
 
+ */
+
     @Override
     public void addPersistentUser(UserDTO user) {
-        myDB.addPersistentUser(user.getIP(), user.getUsername(), user.getPassword(), user.getPasswordSalt(), user.getCertificate());
+        myDB.addPersistentUser(user.getUsername(), user.getPassword(), user.getPasswordSalt(), user.getCertificate());
     }
 }
